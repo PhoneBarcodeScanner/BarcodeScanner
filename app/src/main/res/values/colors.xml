@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3678bf</color>
+    <color name="colorPrimaryDark">#531a29</color>
+    <color name="colorAccent">#03DAC5</color>
+    <color name="colorTimberSmartPurple">#531a29</color>
+    <color name="colorTimberSmartWhite">#fff</color>
+    <color name="colorTimberSmartGreen">#49817c</color>
+    <color name="mainBackgroundGrey">#fafafa</color>
+    <color name="shape_color">#444444</color>
+    <color name="placeholderGrey">#bbbbbb</color>
+</resources>

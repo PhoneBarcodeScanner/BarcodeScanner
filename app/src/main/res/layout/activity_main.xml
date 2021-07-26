@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ActivityMainLinearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ActivityMain">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/StockScreenToolBar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_weight="0"
+        android:background="@color/colorTimberSmartPurple"
+        app:popupTheme="@style/AppTheme.PopupOverlay"
+         >
+
+
+        <TextView
+            android:id="@+id/titleas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:fontFamily="serif"
+            android:gravity="center|top"
+            android:text="@string/ActivityMainHeaderBarTitle"
+            android:textColor="@color/colorTimberSmartWhite"
+            android:textSize="40sp" />
+
+    </androidx.appcompat.widget.Toolbar>
+
+
+    <TableLayout
+        android:id="@+id/table_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableRow
+            android:id="@+id/ActivityMainTableRowTitles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+
+
+<!--            <ImageView-->
+<!--                android:id="@+id/Stockimage"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="match_parent"-->
+<!--                />-->
+            <TextView
+                android:id="@+id/ActivityMainStockTakeNameRowTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="0.3"
+                android:background="@drawable/basic_outline"
+                android:paddingLeft="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="@string/ActivityMainStockTakeName"
+                android:textAlignment="viewStart"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="italic"
+                />
+
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="0.45"/>
+<!--            <Button-->
+<!--                android:layout_width="45dp"-->
+<!--                android:layout_height="45dp"-->
+<!--                android:background="@drawable/ic_launcher_options_foreground"-->
+
+<!--                android:textColor="@color/colorAccent" />-->
+
+        </TableRow>
+    </TableLayout>
+
+
+    <LinearLayout
+        android:id="@+id/emptyTab"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        >
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/ic_launcher_get_started_foreground"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ActivityMainStocktakePlaceHolderText"
+            android:textAlignment="center"
+            android:textColor="@color/placeholderGrey"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+
+    <ListView
+        android:id="@+id/ActivityMainListViewStocktakes"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:descendantFocusability="blocksDescendants"
+        android:layout_weight="9" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/ActivityMainEditStocktake"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:textAlignment="center"
+            android:hint="@string/ActivityMainEditStocktake"/>
+
+        <Button
+            android:id="@+id/ActivityMainAddNewStocktake"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/basic_outline2"
+            android:text="@string/ActivityMainAddNewStockTake"
+            android:textAllCaps="false"
+            android:textColor="@color/colorTimberSmartWhite"
+
+            />
+    </LinearLayout>
+
+
+</LinearLayout>

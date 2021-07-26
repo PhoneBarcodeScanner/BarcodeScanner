@@ -1,0 +1,83 @@
+<resources>
+    <string name="app_name">Barcode Scanner</string>
+    <string name="title_activity_home_screen">Barcode Scanner</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="back_button">Back</string>
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+
+    <!-- Barcode Screen String Values -->
+    <string name="title_activity_barcode_screen">BarcodeScreen</string>
+    <string name="barcodes_button">Barcodes</string>
+    <string name="bsTitle">Barcodes</string>
+    <string name="title_activity_rows_screen">RowsScreen</string>
+
+    <!--Areas Screen string values -->
+    <string name="rowTitle">Area</string>
+    <string name="rowLocation">Area name</string>
+    <string name="rowDate">Date</string>
+    <string name="rowAddEdit">Add</string>
+    <string name="rowView">View</string>
+    <string name="rowDelete">Delete</string>
+    <string name="rowAdd">Add New Area</string>
+    <string name="rowBarcodes">Barcodes</string>
+    <string name="AreasScreenDate">Date</string>\
+    <string name="AreasScreenPlaceHolderText">Add a new area below to begin...</string>
+
+
+    <!--Rows Screen listview string values-->
+    <string name="rowDateText">Date</string>
+    <string name="rowAddButton">Add</string>
+    <string name="rowViewButton">View</string>
+    <string name="rowDeleteButton">Delete</string>
+
+
+    <!--MAIN SCREEN-->
+    <string name="ActivityMainHeaderBarTitle">Barcode Scanner</string>
+    <string name="ActivityMainStockTakeName">Stocktakes</string>
+    <string name="ActivityMainAddNewStockTake">Add New Stocktake</string>
+    <string name="ActivityMainStocktakePlaceHolderText">Add a new stocktake below to begin...</string>
+    <string name="ActivityMainExport">Export</string>
+    <string name="ActivityMainView">Add Area</string>
+    <string name="ActivityMainDelete">Delete Stocktake</string>
+    <string name="ScanningScreenBlankCounter">XXX</string>
+    <string name="ScanningScreenPreCount">Pre-count</string>
+    <string name="ScanningScreenPreCountDefault">0</string>
+    <string name="ScanningScreenBarcodeDefault">Scan Barcode Here...</string>
+    <string name="enter">Enter</string>
+    <string name="enter_barcode_here">Enter Barcode Here</string>
+    <string name="count">Count</string>
+    <string name="difference">Difference</string>
+    <string name="xxx">XXX</string>
+    <string name="finished">Finished</string>
+    <string name="delete">Delete</string>
+    <string name="count2">Count</string>
+    <string name="time">Time</string>
+    <string name="date">Date</string>
+    <string name="row">Row</string>
+    <string name="barcode">Barcode</string>
+    <string name="area">Area</string>
+    <string name="add_barcodes">Add Barcodes</string>
+    <string name="view_barcodes">View barcodes</string>
+    <string name="delete_area">Delete Area</string>
+    <string name="ActivityMainEditStocktake">Add New Stocktake Here</string>
+
+    <string name="connection_loose">Status: No Product Connected</string>
+    <string name="sdk_version">DJI SDK Version: %1$s</string>
+    <string name="product_information">Product Information</string>
+    <string name="connect_refresh">REFRESH</string>
+    <string name="connect_logo_des">TimberSmart Logo</string>
+    <string name="app_version">App Version: %1$s</string>
+    <string name="btn_start_scan">Start Scanning</string>
+    <string name="txt_product_information">Product Information</string>
+    <string name="txt_no_connection">Status: No Product Connected</string>
+    <string name="txt_sdk_version">DJI SDK Version: %1$s</string>
+    <string name="txt_no_product_connected">Status: No Product Connected</string>
+    <string name="txt_user_input">Please enter a number for Row and Pre-Count</string>
+    <string name="search">Tap to Search</string>
+    <string name="title_activity_full_screen">FullScreen</string>
+</resources>

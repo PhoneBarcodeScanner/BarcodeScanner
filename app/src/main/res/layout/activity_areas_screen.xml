@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rowsScreen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".AreasScreen">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/ScanningScreenToolBar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_weight="0"
+        android:background="@color/colorTimberSmartPurple"
+        app:popupTheme="@style/AppTheme.PopupOverlay">
+
+
+        <TextView
+            android:id="@+id/area_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:fontFamily="serif"
+            android:gravity="center|top"
+            android:text="@string/rowTitle"
+            android:textColor="@color/colorTimberSmartWhite"
+            android:textSize="40sp"
+            android:autoSizeTextType="uniform"
+            android:onClick="goHome"/>
+    </androidx.appcompat.widget.Toolbar>
+
+    /////////////////////////////////////////////////////
+
+    <TableLayout
+        android:id="@+id/table_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableRow
+            android:id="@+id/ActivityMainTableRowTitles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+<!--   sorting feature         <ImageView-->
+<!--                android:id="@+id/Areaimage"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="match_parent"/>-->
+            <TextView
+                android:id="@+id/rowLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="0.3"
+                android:background="@drawable/basic_outline"
+                android:paddingLeft="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="Area Name"
+                android:textAlignment="viewStart"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="italic"
+                android:layout_marginRight="-100dp"
+                />
+<!--sorting feature-->
+<!--            <ImageView-->
+<!--                android:id="@+id/Dateimage2"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="match_parent" />-->
+
+            <TextView
+                android:id="@+id/rowDate"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="0.3"
+                android:background="@drawable/basic_outline"
+                android:paddingLeft="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:text="Date"
+                android:textAlignment="viewStart"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="italic"
+                />
+
+
+        </TableRow>
+    </TableLayout>
+
+
+
+
+
+    ////////////////////////////////////////////////////
+<!--    <TableLayout-->
+<!--        android:id="@+id/table_layout"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:weightSum="100">-->
+
+<!--        <TableRow-->
+<!--            android:id="@+id/rowsColumnHeaders"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:padding="10dp">-->
+<!--            <ImageView-->
+<!--                android:id="@+id/Areaimage"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="match_parent"/>-->
+<!--            <TextView-->
+<!--                android:id="@+id/rowLocation"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="25"-->
+<!--                android:gravity="center_vertical"-->
+<!--                android:text="@string/rowLocation"-->
+<!--                android:textColor="#000"-->
+<!--                android:textSize="20sp"-->
+<!--                android:textStyle="bold" />-->
+<!--            <ImageView-->
+<!--                android:id="@+id/Dateimage2"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="match_parent" />-->
+<!--            <TextView-->
+<!--                android:id="@+id/rowDate"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="10"-->
+<!--                android:gravity="center"-->
+<!--                android:text="@string/rowDate"-->
+<!--                android:textColor="#000"-->
+<!--                android:textSize="20sp"-->
+<!--                android:layout_marginLeft="40dp"-->
+<!--                android:textStyle="bold" />-->
+<!--            <TextView-->
+<!--                android:id="@+id/placeholder"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="30"-->
+<!--                android:gravity="center"-->
+<!--                android:textColor="#000"-->
+<!--                android:textSize="20sp"/>-->
+
+
+<!--        </TableRow>-->
+<!--    </TableLayout>-->
+
+    <LinearLayout
+        android:id="@+id/emptyTab"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        >
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/ic_launcher_get_started_foreground"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/AreasScreenPlaceHolderText"
+            android:textAlignment="center"
+            android:textColor="@color/placeholderGrey"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/rowListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="8" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <EditText
+            android:id="@+id/rowsAddAreaEdit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:textAlignment="center"
+            android:hint="Add new Area Here "/>
+
+        <Button
+            android:id="@+id/rowAddButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/basic_outline2"
+            android:textColor="@color/colorTimberSmartWhite"
+            android:layout_weight="1"
+            android:text="@string/rowAdd"
+            android:textAllCaps="false"
+            />
+
+
+
+</LinearLayout>
+
+</LinearLayout>

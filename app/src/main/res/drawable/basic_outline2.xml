@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <!-- Colored rectangle-->
+    <item>
+        <shape android:shape="rectangle">
+            <size android:width="240dp" android:height="60dp" />
+            <solid android:color="@color/shape_color" />
+        </shape>
+    </item>
+
+    <!-- Their color should be the same as layout's background -->
+    <item
+        android:top="-70dp"
+        android:end="160dp"
+        android:start="-140dp"
+        >
+        <rotate
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fromDegrees="135">
+            <shape android:shape="rectangle">
+                <solid android:color="@color/mainBackgroundGrey" />
+            </shape>
+        </rotate>
+    </item>
+
+</layer-list>

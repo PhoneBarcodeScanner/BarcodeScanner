@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ScanningScreen">
+
+    <!--    Toolbar   Layout_Weight: 5 -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/ScanningScreenToolBar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_weight="0"
+        android:background="@color/colorTimberSmartPurple"
+        app:popupTheme="@style/AppTheme.PopupOverlay">
+
+        <TextView
+            android:id="@+id/textViewTitle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="0dp"
+            android:fontFamily="serif"
+            android:gravity="center|top"
+            android:textColor="@color/colorTimberSmartWhite"
+            android:textSize="40sp"
+            android:onClick="goHome"/>
+    </androidx.appcompat.widget.Toolbar>
+
+    <!--    Barcode/Enter/Counters    Layout_Weight: 10-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+            <EditText
+                android:id="@+id/editTextBarcode"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="10dp"
+                android:layout_weight="40"
+                android:textAlignment="center"
+                android:hint="@string/ScanningScreenBarcodeDefault"
+                android:importantForAutofill="no"
+                android:inputType="none">
+
+            </EditText>
+
+            <Button
+                android:id="@+id/buttonEnter"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_weight="20"
+                android:textAllCaps="false"
+                android:text="@string/enter"
+                android:textColor="?android:attr/textColorPrimary">
+            </Button>
+            <Button
+                android:id="@+id/buttonSearch"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginLeft="20dp"
+                android:background="@drawable/ic_baseline_search_24"
+                android:textAllCaps="false"
+                android:textColor="?android:attr/textColorPrimary">
+            </Button>
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray" />
+    <!--    Table Row    Layout_Weight: 3-->
+
+    <!--    Listview    Layout_Weight: 75-->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="80"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:id="@+id/textViewTextPreCount"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="@string/ScanningScreenPreCount">
+                        </TextView>
+
+                        <TextView
+                            android:id="@+id/textViewTextDifference"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="@string/difference">
+                        </TextView>
+
+                        <TextView
+                            android:id="@+id/textViewTextCount"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="@string/count">
+                        </TextView>
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <EditText
+                            android:id="@+id/editTextPreCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:importantForAutofill="no"
+                            android:inputType="number"
+                            android:text="@string/ScanningScreenPreCountDefault"
+                            android:textSize="15sp">
+                        </EditText>
+
+                        <TextView
+                            android:id="@+id/textViewDifference"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center">
+                        </TextView>
+
+                        <TextView
+                            android:id="@+id/textViewCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center">
+                        </TextView>
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/buttonConfirmPreCount"
+                        android:layout_width="1dp"
+                        android:layout_height="38dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:text="Confirm Pre Count"
+                        android:textAllCaps="false"/>
+                </TableLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+            <!--    Table Row    Layout_Weight: 3-->
+
+            <!--    Listview    Layout_Weight: 75-->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="10dp">
+<!--                        <ImageView-->
+<!--                            android:id="@+id/Barimage"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="10" />-->
+                        <TextView
+                            android:id="@+id/t_barcode"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="20"
+                            android:gravity="center_vertical"
+                            android:text="@string/barcode"
+                            android:textColor="#000"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+<!--                        <ImageView-->
+<!--                            android:id="@+id/Rowimage"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="20" />-->
+<!--                        <TextView-->
+<!--                            android:id="@+id/t_row"-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="20"-->
+<!--                            android:gravity="center_vertical"-->
+<!--                            android:text="@string/row"-->
+<!--                            android:textColor="#000"-->
+<!--                            android:textSize="20sp"-->
+<!--                            android:textStyle="bold" />-->
+
+<!--                        <ImageView-->
+<!--                            android:id="@+id/Dateimage"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="20" />-->
+<!--                        <TextView-->
+<!--                            android:id="@+id/t_date"-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="20"-->
+<!--                            android:gravity="center_vertical"-->
+<!--                            android:text="@string/date"-->
+<!--                            android:textColor="#000"-->
+<!--                            android:textSize="20sp"-->
+<!--                            android:textStyle="bold" />-->
+
+<!--                        <ImageView-->
+<!--                            android:id="@+id/Countimage"-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="20" />-->
+<!--                        <TextView-->
+<!--                            android:id="@+id/t_count"-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="20"-->
+<!--                            android:gravity="center_vertical"-->
+<!--                            android:text="@string/count2"-->
+<!--                            android:textColor="#000"-->
+<!--                            android:textSize="20sp"-->
+<!--                            android:textStyle="bold" />-->
+
+<!--                        <TextView-->
+<!--                            android:id="@+id/t_del"-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="match_parent"-->
+<!--                            android:layout_weight="20"-->
+<!--                            android:gravity="center_vertical"-->
+<!--                            android:layout_marginLeft="25dp"-->
+<!--                            android:text="@string/delete"-->
+<!--                            android:textColor="#000"-->
+<!--                            android:textSize="20sp"-->
+<!--                            android:textStyle="bold" />-->
+                    </TableRow>
+                </TableLayout>
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/ScanningScreenListView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="75">
+
+            </ListView>
+        </LinearLayout>
+
+        <TextureView
+            android:id="@+id/video_previewer_surface"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="10" />
+    </LinearLayout>
+    <!--    Finished Button Layout_Weight: 5-->
+</LinearLayout>

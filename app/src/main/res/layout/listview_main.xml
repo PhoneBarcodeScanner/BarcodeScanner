@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:descendantFocusability="blocksDescendants"
+    android:orientation="horizontal"
+    android:paddingLeft="50dp">
+
+    <TextView
+        android:id="@+id/ActivityMainTextViewStockTakeName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_weight="0.4"
+        android:text="@string/ActivityMainStockTakeName" />
+
+    <Button
+        android:id="@+id/ActivityMainButtonView"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:onClick="StockTakeViewButtonClick"
+        android:background="@drawable/ic_launcher_header_more_foreground"
+        android:textAllCaps="false"/>
+
+    <Button
+        android:id="@+id/ActivityMainButtonExport"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:onClick="export"
+        android:background="@drawable/ic_launcher_header_share_foreground"
+        android:textAllCaps="false"/>
+
+
+    <Button
+        android:id="@+id/ActivityMainButtonDelete"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:onClick="StockTakeDeleteButtonClick"
+        android:background="@drawable/ic_launcher_header_delete_foreground"
+        android:textAllCaps="false"/>
+
+
+</LinearLayout>
