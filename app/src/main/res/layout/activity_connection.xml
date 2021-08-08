@@ -58,6 +58,60 @@
                     android:textColor="#FFFFFF"
                     android:textAllCaps="false" />
 
+                <TextView
+                    android:id="@+id/text_connection_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="40sp"
+                    android:text="@string/txt_no_product_connected"
+                    android:textAlignment="center"
+                    android:textColor="#22574f"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toTopOf="@+id/text_product_info" />
+
+                <LinearLayout
+                    android:layout_marginRight="-50px"
+                    android:layout_width="200sp"
+                    android:layout_height="100sp"
+                    android:layout_weight="10"
+                    android:layout_gravity="right"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/text_product_info"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="center"
+                        android:layout_marginTop="10sp"
+                        android:text="@string/txt_product_information"
+                        android:textColor="#22574f"
+                        android:textSize="25px"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:layout_marginTop="5dp"
+                        android:gravity="center"
+                        android:textSize="25px"
+                        android:text="@string/txt_sdk_version"
+                        android:textColor="@android:color/darker_gray" />
+
+
+                    <TextView
+                        android:id="@+id/app_version"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:gravity="center"
+                        android:textSize="25px"
+                        android:layout_marginTop="5dp"
+                        android:text="@string/app_version"
+                        android:textColor="@android:color/darker_gray" />
+
+                </LinearLayout>
 
             </LinearLayout>
 

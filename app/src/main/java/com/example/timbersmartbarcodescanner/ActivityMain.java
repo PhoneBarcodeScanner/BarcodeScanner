@@ -6,13 +6,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -22,10 +25,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
+//import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,18 +40,35 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 
 /*
-*   159.333 - Programming Project
-*   Timber smart Phone Barcode scanner
+* This class is the back-end for the start up screen, AKA the Stock take screen.
 *
-*   Student Name / Student ID:
-*       Runyu Luo (17217478)
-*       Caitlin Winterburn (19028948)
-*       Mohammed Shareef (19032353)
-*       Seungwoon Yang (21008279)
+* This app works in the following ways:
+* A singleton class named Data is used to store the inventory management data.
+*
+* The data structure is as follows:
+* Data consists of many stocktakes
+* Stocktakes consist of many areas
+* Areas consist of many barcodes.
+* Stocktakes, areas and barcodes all have extra fields to them too (date, time ....)
+*
+*
+* This is the first iteration v1.x of the Drone Barcode Scanner created by 4 Massey University Students, namely:
+* Yining Gan,
+* Junjie Mai,
+* Zelin Yao,
+* Junjie Mai.
+* Year: 2021.
+*
+* Modified by:
+* Sophie Francis,
+* Mark Macnamara,
+* Josh Martin.
+* Year: 2021
 */
 
 public class ActivityMain extends AppCompatActivity implements Serializable {
@@ -64,16 +86,16 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     private Toolbar toolbar_stock_screen;
     private LinearLayout mHintLayoutTab;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         if ((checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
-                (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
-                    (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED))
+                (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED))
             requestPermissions(
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,  Manifest.permission.CAMERA}, 1);
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         else {
             try {
                 init();
@@ -148,8 +170,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                         .setPositiveButton("OK",null)
                         .show();
                 break;
-
-                //bluetooth connectivity ------  ? (keep or remove)
+                //Keep or remove bluetooth connectivity?
             case R.id.bluetooth_connect:
                 Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
                 startActivity(intent);
