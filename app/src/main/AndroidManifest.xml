@@ -46,33 +46,22 @@
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="barcode" /> <!--Barcode reading from camera feed-->
-        <activity
-            android:name=".ConnectionActivity"
-            android:configChanges="orientation"
-            android:screenOrientation="sensorLandscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
-                android:resource="@xml/accessory_filter" />
-        </activity>
 
         <activity
             android:name=".ActivityMain"
             android:label="@string/title_activity_home_screen"
             android:screenOrientation="sensorLandscape"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
         <activity
             android:name=".ScanningScreen"
             android:windowSoftInputMode="stateHidden"
-            android:screenOrientation="sensorLandscape" />
+            android:screenOrientation="sensorLandscape">
+        </activity>
         <activity
             android:name=".AreasScreen"
             android:label="@string/title_activity_rows_screen"
@@ -83,11 +72,7 @@
             android:label="@string/title_activity_barcode_screen"
             android:screenOrientation="sensorLandscape"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".FullScreenActivity"
-            android:label="@string/title_activity_full_screen"
-            android:screenOrientation="sensorLandscape"
-            android:theme="@style/AppTheme.NoActionBar" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.timbersmartbarcodescanner.fileProvider"

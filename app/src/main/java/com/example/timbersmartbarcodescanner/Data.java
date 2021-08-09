@@ -7,7 +7,7 @@ import java.util.ArrayList;
 // This is a singleton class which will hold all the data for each stock take.
 // This was decided to avoid passing bundles across many activities.
 
-public class    Data implements Serializable {
+public class Data implements Serializable {
 
     private static final String FILENAME = "notused.txt";
     private static String FILE_NAME = "timbersmart.txt";

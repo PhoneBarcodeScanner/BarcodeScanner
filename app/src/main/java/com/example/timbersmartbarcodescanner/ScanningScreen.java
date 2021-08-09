@@ -87,9 +87,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     protected VideoFeeder.VideoDataListener mReceivedVideoDataListener = null;
     protected TextureView mVideoSurface = null;
     /**
-     * @param mCodeManager    Codec for video live view
+     * @param //mCodeManager    Codec for video live view
      */
-    protected DJICodecManager mCodecManager = null;
+   // protected DJICodecManager mCodecManager = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -213,9 +213,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     /**
      * On drone-product change.
      */
-    protected void onProductChange() {
+   /* protected void onProductChange() {
         initPreviewer();
-    }
+    }*/
 
     public void init() throws Exception {
 
@@ -343,7 +343,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
      * <p>
      * To connect the DJI drone product
      */
-    private void initPreviewer() {
+   /* private void initPreviewer() {
         BaseProduct product = FPVDemoApplication.getProductInstance();
 
         if (product == null || !product.isConnected()) {
@@ -361,7 +361,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     /**
      * Unregister the DJI drone(product)
      */
-    private void uninitPreviewer() {
+   /* private void uninitPreviewer() {
         Camera camera = FPVDemoApplication.getCameraInstance();
         if (camera != null) {
             // Reset the callback
@@ -386,9 +386,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         matchCount = 0;
         videoCaptureBitmap = null;
 
-        if (mCodecManager == null) {
+       /* if (mCodecManager == null) {
             mCodecManager = new DJICodecManager(this, surface, width, height);
-        }
+        }*/
     }
 
     @Override
@@ -400,10 +400,10 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
         Log.e(TAG, "onSurfaceTextureDestroyed");
         //if(cameraMode==false) {
-        if (mCodecManager != null) {
+       /* if (mCodecManager != null) {
             mCodecManager.cleanSurface();
             mCodecManager = null;
-        }
+        }*/
         return false;
     }
 
@@ -586,7 +586,43 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 }
             }
         };
+        mBarcode.addTextChangedListener(barcodeTextWatcher);
 
+        //Implementation of stick scanners version of precount text watcher
+        //Causes some issues with toasts... (Replicates error of displaying "Barcode ____ scanned" even
+        //if duplicate barcode)
+        mBarcode.setImeOptions(EditorInfo.IME_ACTION_NONE);
+
+        // Precount Input Text Watcher
+        TextWatcher preCountWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String tempString = mPreCount.getText().toString();
+                int tempPreCount;
+
+                if (tempString.equals("")) {
+                    tempPreCount = 0;
+                } else {
+                    tempPreCount = Integer.parseInt(tempString);
+                }
+                mPreCountGlobal = tempPreCount;
+                calculateDifference();
+                try {
+                    getAreaOnFromPassedInstance().setPreCount(tempPreCount);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        mPreCount.addTextChangedListener(preCountWatcher);
     }
 
     public void calculateDifference() {
@@ -811,7 +847,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
     @Override
     protected void onPause() {
-        uninitPreviewer();
+        //uninitPreviewer();
         super.onPause();
         try {
             writeFileOnInternalStorage();
@@ -830,7 +866,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         Log.e(TAG, "onResume");
         super.onResume();
         // try to re-initialise the previewer and check if the product(drone) is attached and ready to use
-        onProductChange();
+        //onProductChange();
 
         if (mVideoSurface == null) {
             Log.e(TAG, "mVideoSurface is null");
@@ -844,7 +880,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
     @Override
     protected void onDestroy() {
-        uninitPreviewer();
+        //uninitPreviewer();
         super.onDestroy();
     }
 

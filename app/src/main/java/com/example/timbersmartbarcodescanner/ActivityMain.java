@@ -81,12 +81,10 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     private TextView title,mainTitle;
     private Button mAddNewStocktake;
     private EditText mNewStocktakeName;
-    private LinearLayout mHintLayoutTab;
-
     private MenuItem mi, help;
     private ImageView iv;
     private Toolbar toolbar_stock_screen;
-
+    private LinearLayout mHintLayoutTab;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -223,12 +221,10 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
         mainTitle = findViewById(R.id.titleas);
         title = findViewById(R.id.ActivityMainStockTakeNameRowTitle);
-
         mListView = findViewById(R.id.ActivityMainListViewStocktakes);
         mAddNewStocktake = findViewById(R.id.ActivityMainAddNewStocktake);
         mNewStocktakeName = findViewById(R.id.ActivityMainEditStocktake);
         mHintLayoutTab = findViewById(R.id.emptyTab);
-
        // iv = findViewById(R.id.Stockimage);
         toolbar_stock_screen=(Toolbar)findViewById(R.id.StockScreenToolBar);
         setSupportActionBar(toolbar_stock_screen);

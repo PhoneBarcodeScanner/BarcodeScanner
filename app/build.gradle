@@ -69,6 +69,8 @@ android {
 
 
 dependencies {
+    implementation 'com.journeyapps:zxing-android-embedded:3.4.0'
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.multidex:multidex:2.0.0'
     implementation 'com.squareup:otto:1.3.8'

@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -27,35 +28,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import dji.common.error.DJIError;
-import dji.common.error.DJISDKError;
-import dji.log.DJILog;
-import dji.sdk.base.BaseComponent;
-import dji.sdk.base.BaseProduct;
-import dji.sdk.products.Aircraft;
-import dji.sdk.sdkmanager.DJISDKInitEvent;
-import dji.sdk.sdkmanager.DJISDKManager;
-
-public class ConnectionActivity extends Activity implements View.OnClickListener {
+public class ConnectionActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = ConnectionActivity.class.getName();
     private ImageView mLogo;
     private TextView mTextConnectionStatus, mTextProduct, mVersionTv;
     private Button mBtnOpen;
     private static final String[] REQUIRED_PERMISSION_LIST = new String[]{
-            Manifest.permission.VIBRATE,
-            Manifest.permission.INTERNET,
-            Manifest.permission.ACCESS_WIFI_STATE,
-            Manifest.permission.WAKE_LOCK,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_NETWORK_STATE,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.CHANGE_WIFI_STATE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.CAMERA,
     };
     private List<String> missingPermission = new ArrayList<>();
@@ -69,12 +50,6 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
         setContentView(R.layout.activity_connection);
 
         initUI();
-
-        // Register the broadcast receiver for receiving the device connection's changes.
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(FPVDemoApplication.FLAG_CONNECTION_CHANGE);
-        registerReceiver(mReceiver, filter);
-        mBtnOpen.setEnabled(true); //to connect with the drone this must be commented out
     }
 
     /**
@@ -88,13 +63,6 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
                 missingPermission.add(eachPermission);
             }
         }
-        // Request for missing permissions
-        if (!missingPermission.isEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ActivityCompat.requestPermissions(this,
-                    missingPermission.toArray(new String[missingPermission.size()]),
-                    REQUEST_PERMISSION_CODE);
-        }
-
     }
 
 
@@ -114,85 +82,6 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
                 }
             }
         }
-        // If there is enough permission, we will start the registration
-        if (missingPermission.isEmpty()) {
-            startSDKRegistration();
-        } else {
-            showToast("Missing permission(s)");
-        }
-    }
-
-    private void startSDKRegistration() {
-        if (isRegistrationInProgress.compareAndSet(false, true)) {
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    showToast( "Registering...");
-                    DJISDKManager.getInstance().registerApp(getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
-                        @Override
-                        public void onRegister(DJIError djiError) {
-                            if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
-                                DJILog.e("App registration", DJISDKError.REGISTRATION_SUCCESS.getDescription());
-                                DJISDKManager.getInstance().startConnectionToProduct();
-                                showToast("Registration complete");
-                            } else {
-                                showToast( "Registration failed. Check network connection");
-                            }
-                            Log.v(TAG, djiError.getDescription());
-                        }
-
-                        @Override
-                        public void onProductDisconnect() {
-                            Log.d(TAG, "onProductDisconnect");
-                            showToast("Product Disconnected");
-                            mBtnOpen.setEnabled(false);
-                        }
-                        @Override
-                        public void onProductConnect(BaseProduct baseProduct) {
-                            Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
-                            showToast("Product Connected");
-                            mBtnOpen.setEnabled(true);
-                        }
-
-                        @Override
-                        public void onProductChanged(BaseProduct baseProduct) {
-
-                        }
-
-                        @Override
-                        public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent oldComponent,
-                                                      BaseComponent newComponent) {
-
-                            if (newComponent != null) {
-                                newComponent.setComponentListener(new BaseComponent.ComponentListener() {
-
-                                    @Override
-                                    public void onConnectivityChange(boolean isConnected) {
-                                        Log.d(TAG, "onComponentConnectivityChanged: " + isConnected);
-                                    }
-                                });
-                            }
-                            Log.d(TAG,
-                                    String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s",
-                                            componentKey,
-                                            oldComponent,
-                                            newComponent));
-
-                        }
-
-                        @Override
-                        public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-
-                        }
-
-                        @Override
-                        public void onDatabaseDownloadProgress(long l, long l1) {
-
-                        }
-                    });
-                }
-            });
-        }
     }
 
     @Override
@@ -202,8 +91,6 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
 
         // Register the broadcast receiver for receiving the device connection's changes.
         IntentFilter filter = new IntentFilter();
-        filter.addAction(FPVDemoApplication.FLAG_CONNECTION_CHANGE);
-        registerReceiver(mReceiver, filter);
     }
 
     @Override
@@ -221,68 +108,26 @@ public class ConnectionActivity extends Activity implements View.OnClickListener
     @Override
     protected void onDestroy() {
         Log.e(TAG, "onDestroy");
-        unregisterReceiver(mReceiver);
         super.onDestroy();
     }
 
     private void initUI() {
         mLogo = findViewById(R.id.TS_logo);
-        mTextConnectionStatus = (TextView) findViewById(R.id.text_connection_status);
-        mTextProduct = (TextView) findViewById(R.id.text_product_info);
         mBtnOpen = findViewById(R.id.btn_open);
         mBtnOpen.setOnClickListener(this);
 
-        mVersionTv = (TextView) findViewById(R.id.textView2);
-        mVersionTv.setText(getResources().getString(R.string.sdk_version, DJISDKManager.getInstance().getSDKVersion()));
-
-        TextView mAppVersion = findViewById(R.id.app_version);
         try {
             PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
             String version = pInfo.versionName;
-            mAppVersion.setText(getResources().getString(R.string.app_version, version));
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            refreshSDKRelativeUI();
-        }
-    };
-
-    private void refreshSDKRelativeUI() {
-        BaseProduct mProduct = FPVDemoApplication.getProductInstance();
-
-        if (null != mProduct && mProduct.isConnected()) {
-
-            Log.v(TAG, "refreshSDK: True");
-            mBtnOpen.setEnabled(true);
-
-            String str = mProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
-            mTextConnectionStatus.setText("Status: " + str + " connected");
-
-            if (null != mProduct.getModel()) {
-                mTextProduct.setText("" + mProduct.getModel().getDisplayName());
-            } else {
-                mTextProduct.setText(R.string.product_information);
-            }
-
-        } else {
-
-            Log.v(TAG, "refreshSDK: False");
-           // mBtnOpen.setEnabled(false);
-
-            mTextProduct.setText(R.string.product_information);
-            mTextConnectionStatus.setText(R.string.connection_loose);
-        }
-    }
 
     @Override
     public void onClick(View v) {
-       // v.setEnabled(true);
+        // v.setEnabled(true);
         switch (v.getId()) {
             case R.id.btn_open: {
                 if(v.isEnabled()) {

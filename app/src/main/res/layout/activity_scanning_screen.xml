@@ -225,6 +225,14 @@
                             android:textSize="20sp"
                             android:textStyle="bold" />
 
+                        <Button
+                            android:id="@+id/scanBtn"
+                            android:layout_centerInParent="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Scan"
+                            android:textSize="20sp"/>
+
 <!--                        <ImageView-->
 <!--                            android:id="@+id/Rowimage"-->
 <!--                            android:layout_width="wrap_content"-->
