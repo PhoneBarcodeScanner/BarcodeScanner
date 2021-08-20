@@ -1,5 +1,6 @@
 package com.example.timbersmartbarcodescanner;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
@@ -8,10 +9,8 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,7 +20,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.TextureView;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -31,39 +29,29 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.mlkit.vision.barcode.BarcodeScanner;
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
-import com.google.mlkit.vision.barcode.BarcodeScanning;
-import com.google.mlkit.vision.common.InputImage;
+import com.example.timbersmartbarcodescanner.scan.BarcodeScannerActivity;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
-import dji.common.product.Model;
-import dji.sdk.base.BaseProduct;
-import dji.sdk.camera.Camera;
-import dji.sdk.camera.VideoFeeder;
-import dji.sdk.codec.DJICodecManager;
-
-public class ScanningScreen extends AppCompatActivity implements TextureView.SurfaceTextureListener, Serializable {
+public class ScanningScreen extends AppCompatActivity implements Serializable {
 
     private static final String TAG = "ScanningScreen";
+    
+    private Area area;
+    
     private int mCountGlobal, mPreCountGlobal;
     private TextView mCount, mDifference, mArea_title, mt_Barcode, mt_Row, mt_Count, mt_Date;
     private EditText mBarcode, mPreCount;
@@ -84,12 +72,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     /**
      * @param mReceivedVideoDataListener received video data listener.
      */
-    protected VideoFeeder.VideoDataListener mReceivedVideoDataListener = null;
     protected TextureView mVideoSurface = null;
-    /**
-     * @param //mCodeManager    Codec for video live view
-     */
-   // protected DJICodecManager mCodecManager = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +87,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         Intent intent = getIntent();
         mPassedAreaIndex = intent.getIntExtra("Area Index", -1);
         mPassedStocktakeIndex = intent.getIntExtra("Stocktake Index", -1);
+        area = Data.getDataInstance().getStocktakeList().get(mPassedStocktakeIndex).getAreaList().get(mPassedAreaIndex);
 
         //get directory path to the bitmap storage location
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
@@ -119,14 +104,42 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         try {
             //set title for scanning screen
             mArea_title = findViewById(R.id.textViewTitle);
-            mArea_title.setText(getAreaOnFromPassedInstance().getAreaString() + "'s Barcodes");
+            mArea_title.setText(area.getAreaString() + "'s Barcodes");
             init();
             //Animation code for barcode titles removed from here
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // 바코드 읽기 요청
+        findViewById(R.id.scanBtn).setOnClickListener(v -> startActivityForResult(
+                new Intent(this, BarcodeScannerActivity.class),
+                0));
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        // 바코드 읽기 결과 처리
+        if (requestCode == 0) {
+            if (resultCode != Activity.RESULT_OK || data == null) return;
+            String[] barcodes = data.getStringArrayExtra(BarcodeScannerActivity.RESULT_DATA_BARCODES);
+            int imageId = data.getIntExtra(BarcodeScannerActivity.RESULT_DATA_IMAGE_ID, -1);
+
+            try {
+                onBarcodesRead(barcodes, imageId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void onBarcodesRead(String[] barcodes, int imageId) throws Exception {
+        for (String barcode : barcodes) {
+            saveBarcode(barcode, imageId);
+        }
+    }
 
     public void update() {
         mBarcodeListAdapter.notifyDataSetChanged();
@@ -210,13 +223,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * On drone-product change.
-     */
-   /* protected void onProductChange() {
-        initPreviewer();
-    }*/
-
     public void init() throws Exception {
 
         // Assigning views to variables
@@ -242,7 +248,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                                 if (!"".equals(editText.getText().toString())) {
                                     ArrayList<Barcode> temp = new ArrayList<Barcode>();
                                     try {
-                                        for (Barcode b : getAreaOnFromPassedInstance().getBarcodeList()) {
+                                        for (Barcode b : area.getBarcodeList()) {
                                             if (b.getBarcode().equals(editText.getText().toString())) {
                                                 temp.add(b);
                                                 break;
@@ -267,7 +273,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         .show();
             } else {
                 try {
-                    mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, getAreaOnFromPassedInstance().getBarcodeList(), duplicationEnabled);
+                    mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, area.getBarcodeList(), duplicationEnabled);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -279,18 +285,18 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
         mVideoSurface = findViewById(R.id.video_previewer_surface);
         if (null != mVideoSurface) {
-            mVideoSurface.setSurfaceTextureListener(this);
+            mVideoSurface.setSurfaceTextureListener((TextureView.SurfaceTextureListener) this);
             //sets up the video display, interface methods are overridden below
         }
 
         // Set this to be the value passed from area
         // or just count how many barcodes are currently in array
         int s = 0;
-        for (Barcode b : getAreaOnFromPassedInstance().getBarcodeList()) {
+        for (Barcode b : area.getBarcodeList()) {
             s = s + Integer.parseInt(b.getCount());
         }
         mCountGlobal = s;
-        mPreCountGlobal = getAreaOnFromPassedInstance().getPreCount();
+        mPreCountGlobal = area.getPreCount();
 
         mCount.setText(String.valueOf(mCountGlobal));
         mPreCount.setHint("Enter PreCount");
@@ -298,7 +304,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
         mPreCount.setText(String.valueOf(mPreCountGlobal));
 
-        mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, getAreaOnFromPassedInstance().getBarcodeList(), duplicationEnabled);
+        mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, area.getBarcodeList(), duplicationEnabled);
         mListView.setAdapter(mBarcodeListAdapter);
 
         // When enter is pressed, adds on a \n character
@@ -327,7 +333,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
             mPreCountGlobal = tempPreCount;
             try {
-                getAreaOnFromPassedInstance().setPreCount(tempPreCount);
+                area.setPreCount(tempPreCount);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -336,183 +342,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
         });
         initTextWatchers();
-    }
-
-    /**
-     * Set up the previewer, DJI origin
-     * <p>
-     * To connect the DJI drone product
-     */
-   /* private void initPreviewer() {
-        BaseProduct product = FPVDemoApplication.getProductInstance();
-
-        if (product == null || !product.isConnected()) {
-            showToast("DJIAircraft device disconnected");
-        } else {
-            if (null != mVideoSurface) {
-                mVideoSurface.setSurfaceTextureListener(this);
-            }
-            if (!product.getModel().equals(Model.UNKNOWN_AIRCRAFT)) {
-                VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(mReceivedVideoDataListener);
-            }
-        }
-    }
-
-    /**
-     * Unregister the DJI drone(product)
-     */
-   /* private void uninitPreviewer() {
-        Camera camera = FPVDemoApplication.getCameraInstance();
-        if (camera != null) {
-            // Reset the callback
-            VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(null);
-        }
-    }
-
-    /**
-     * Override for using the TextureView when receiving the video streaming from the drone
-     *
-     * @param surface where the video will be presenting as a View element to users
-     * @param width
-     * @param height
-     */
-    @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        Log.e(TAG, "onSurfaceTextureAvailable");
-
-        //on startup initialise scanning logic variables
-        compareBarcode = null;
-        justReadBarcode = false;
-        matchCount = 0;
-        videoCaptureBitmap = null;
-
-       /* if (mCodecManager == null) {
-            mCodecManager = new DJICodecManager(this, surface, width, height);
-        }*/
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        Log.e(TAG, "onSurfaceTextureSizeChanged");
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        Log.e(TAG, "onSurfaceTextureDestroyed");
-        //if(cameraMode==false) {
-       /* if (mCodecManager != null) {
-            mCodecManager.cleanSurface();
-            mCodecManager = null;
-        }*/
-        return false;
-    }
-
-    /**
-     * Magical processing point for video streaming during the view update (video streaming)
-     *
-     * @param surface
-     */
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        //Image processing - only required if a barcode has not just been read, otherwise just update surface texture - improves frame rate
-        if (!justReadBarcode) {
-
-            videoCaptureBitmap = mVideoSurface.getBitmap(); //get bitmap to look for barcode
-
-            //options - can specify which barcode types to be scanned
-            BarcodeScannerOptions options =
-                    new BarcodeScannerOptions.Builder()
-                            .setBarcodeFormats(com.google.mlkit.vision.barcode.Barcode.FORMAT_ALL_FORMATS)
-                            .build();
-
-            InputImage image = InputImage.fromBitmap(videoCaptureBitmap, 0); //image to query for barcode
-
-            BarcodeScanner barcodeScanner = BarcodeScanning.getClient(options);
-
-            //Task to process the image to look for a barcode
-            Task<List<com.google.mlkit.vision.barcode.Barcode>> result = barcodeScanner.process(image)
-                    .addOnSuccessListener(new OnSuccessListener<List<com.google.mlkit.vision.barcode.Barcode>>() {
-                        @Override
-                        public void onSuccess(List<com.google.mlkit.vision.barcode.Barcode> barcodeList) {
-                            for (com.google.mlkit.vision.barcode.Barcode barcode : barcodeList) {
-                                if (!justReadBarcode) { //in case multiple of the same barcode were captured
-
-                                    String rawValue = barcode.getRawValue();
-
-                                    if (compareBarcode == null) { //empty comparison - assign current barcode value to be tested
-                                        compareBarcode = rawValue;
-
-                                    } else if (compareBarcode.equals(rawValue)) { //comparison barcode is a match for the current scanned barcode
-                                        matchCount++;
-
-                                        //if matchCount now equals 2 there have been 3 simultaneous reads of the same barcode from 3 separate frames
-                                        if (matchCount == 2) {
-                                            justReadBarcode = true;
-
-                                            //add new barcode to the data system with current unique image id
-                                            try {
-                                                boolean unique = saveBarcode(rawValue + "\n", imageUniqueId);
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-
-                                            //Storing image
-                                            File bitmapPath = new File(bitmapDirectory, imageUniqueId + ".jpg");
-                                            FileOutputStream fos = null;
-                                            try {
-                                                fos = new FileOutputStream(bitmapPath);
-                                                videoCaptureBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-                                            try {
-                                                assert fos != null;
-                                                fos.close();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            }
-                                            //------------
-
-                                            imageUniqueId++; //increase count to save the next bitmap under a different unique id
-                                            try {
-                                                Data.getDataInstance().setImageIdCount(imageUniqueId); //save current unique id straight away in case of app closure
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-
-                                            mBarcodeListAdapter.notifyDataSetChanged();
-                                            calculateDifference();
-
-                                            //reset variables to scan again
-                                            matchCount = 0;
-                                            compareBarcode = null;
-
-                                            //once you have successfully read a barcode wait for a bit before reading again
-                                            Handler handler = new Handler();
-                                            handler.postDelayed(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    justReadBarcode = false;
-                                                    showToast("Scan another barcode...");//inform user that they can scan a barcode again
-                                                }
-                                            }, 5000); //wait for 5 seconds before changing justReadBarcode back to false
-                                        }
-                                    } else { //comparison barcode does not match, reassign to current barcode value and restart count
-                                        compareBarcode = rawValue;
-                                        matchCount = 0;
-                                    }
-                                }
-                            }
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            showToast("Fail");
-                        }
-                    });
-
-        }
     }
 
     /**
@@ -526,10 +355,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 Toast.makeText(ScanningScreen.this, msg, Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    public Area getAreaOnFromPassedInstance() throws Exception {
-        return Data.getDataInstance().getStocktakeList().get(mPassedStocktakeIndex).getAreaList().get(mPassedAreaIndex);
     }
 
     public void initTextWatchers() {
@@ -586,43 +411,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 }
             }
         };
-        mBarcode.addTextChangedListener(barcodeTextWatcher);
 
-        //Implementation of stick scanners version of precount text watcher
-        //Causes some issues with toasts... (Replicates error of displaying "Barcode ____ scanned" even
-        //if duplicate barcode)
-        mBarcode.setImeOptions(EditorInfo.IME_ACTION_NONE);
-
-        // Precount Input Text Watcher
-        TextWatcher preCountWatcher = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String tempString = mPreCount.getText().toString();
-                int tempPreCount;
-
-                if (tempString.equals("")) {
-                    tempPreCount = 0;
-                } else {
-                    tempPreCount = Integer.parseInt(tempString);
-                }
-                mPreCountGlobal = tempPreCount;
-                calculateDifference();
-                try {
-                    getAreaOnFromPassedInstance().setPreCount(tempPreCount);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        mPreCount.addTextChangedListener(preCountWatcher);
     }
 
     public void calculateDifference() {
@@ -653,12 +442,12 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     // Firstly checks if scanned barcode is already in system
     // If not it then constructs new barcode object and adds it to the arrayList
     public boolean saveBarcode(String barcode, int bitmapId) throws Exception {
-
         playSound();
+
         //Check to see if the barcode doesn't exist before adding.
         boolean unique = true;
-        for (int i = 0; i < getAreaOnFromPassedInstance().getBarcodeList().size(); i++) {
-            if (getAreaOnFromPassedInstance().getBarcodeList().get(i).getBarcode().equals(barcode)) {
+        for (int i = 0; i < area.getBarcodeList().size(); i++) {
+            if (area.getBarcodeList().get(i).getBarcode().equals(barcode)) {
                 unique = false;
                 break;
             }
@@ -667,7 +456,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         if (unique || mi.isChecked()) {//if the barcode is unique
             mCountGlobal++;
             int x = 0;
-            for (Barcode b : getAreaOnFromPassedInstance().getBarcodeList()) {
+            for (Barcode b : area.getBarcodeList()) {
                 if (b.getBarcode().equals(barcode)) {
                     x = Integer.parseInt(b.getCount());
                     x++;
@@ -677,20 +466,14 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                     break;
                 }
             }
-            if (x == 0)
-                getAreaOnFromPassedInstance().addBarcode(new Barcode(barcode, getAreaOnFromPassedInstance().getAreaString(), 1, bitmapId));
+            if (x == 0) {
+                area.addBarcode(new Barcode(barcode, area.getAreaString(), 1, bitmapId));
+            }
             writeFileOnInternalStorage();
-            mt_Barcode.setTag(new Boolean(false));
-            mt_Row.setTag(new Boolean(false));
-            mt_Date.setTag(new Boolean(false));
-            mt_Count.setTag(new Boolean(false));
-            iv1.setImageBitmap(null);
-            iv2.setImageBitmap(null);
-            iv3.setImageBitmap(null);
-            iv4.setImageBitmap(null);
         } else {
             Toast.makeText(this, "Barcode ignored, already exists in system", Toast.LENGTH_LONG).show();
         }
+
         update();
         return unique;
     }
@@ -716,13 +499,13 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         String item = child.getText().toString();
                         Toast.makeText(ScanningScreen.this, item + " deleted", Toast.LENGTH_LONG).show();
                         try {
-                            for (int n = 0; n < getAreaOnFromPassedInstance().getBarcodeList().size(); n++) {
-                                Barcode barcode = getAreaOnFromPassedInstance().getBarcodeList().get(n);
+                            for (int n = 0; n < area.getBarcodeList().size(); n++) {
+                                Barcode barcode = area.getBarcodeList().get(n);
                                 if (barcode.getBarcode().equals(item)) {
                                     int bitmapId;
                                     if (barcode.getCount().equals("1")) {
                                         bitmapId = barcode.getBitmapIdArrayList().get(0);//delete the only entry at index 0
-                                        getAreaOnFromPassedInstance().getBarcodeList().remove(n);
+                                        area.getBarcodeList().remove(n);
                                     } else {
                                         int x = Integer.parseInt(barcode.getCount());
                                         x--;
@@ -739,7 +522,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                                     view.getId();
                                     update();
 
-                                    File f = new File(bitmapDirectory,bitmapId + ".jpg");
+                                    File f = new File(bitmapDirectory, bitmapId + ".jpg");
                                     boolean delete = f.delete();
 
                                     break;
@@ -767,9 +550,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
         Barcode barcode = null;
         try {
-            for (int n = 0; n < getAreaOnFromPassedInstance().getBarcodeList().size(); n++) {
-                if (getAreaOnFromPassedInstance().getBarcodeList().get(n).getBarcode().equals(barcodeName)) {
-                    barcode = getAreaOnFromPassedInstance().getBarcodeList().get(n);
+            for (int n = 0; n < area.getBarcodeList().size(); n++) {
+                if (area.getBarcodeList().get(n).getBarcode().equals(barcodeName)) {
+                    barcode = area.getBarcodeList().get(n);
                     break;
                 }
             }
@@ -822,7 +605,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 boolean finalLast = last;
                 new AlertDialog.Builder(ScanningScreen.this)
                         .setIcon(R.drawable.ic_baseline_photo_camera_24)
-                        .setTitle("Barcode: " + barcodeName + " " + (index-1) + "/" + bitmapIdArray.size())
+                        .setTitle("Barcode: " + barcodeName + " " + (index - 1) + "/" + bitmapIdArray.size())
                         .setView(alertImageView)
                         .setPositiveButton("next", new DialogInterface.OnClickListener() {
                             @Override
@@ -835,7 +618,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             } else {
                 new AlertDialog.Builder(ScanningScreen.this)
                         .setIcon(R.drawable.ic_baseline_photo_camera_24)
-                        .setTitle("Barcode: " + barcodeName + " " + (index+1) + "/" + bitmapIdArray.size())
+                        .setTitle("Barcode: " + barcodeName + " " + (index + 1) + "/" + bitmapIdArray.size())
                         .setView(alertImageView)
                         .setNegativeButton("close", null)//last is true so no next button
                         .show();
@@ -847,7 +630,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
     @Override
     protected void onPause() {
-        //uninitPreviewer();
         super.onPause();
         try {
             writeFileOnInternalStorage();
@@ -866,7 +648,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         Log.e(TAG, "onResume");
         super.onResume();
         // try to re-initialise the previewer and check if the product(drone) is attached and ready to use
-        //onProductChange();
 
         if (mVideoSurface == null) {
             Log.e(TAG, "mVideoSurface is null");
@@ -880,11 +661,10 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
     @Override
     protected void onDestroy() {
-        //uninitPreviewer();
         super.onDestroy();
     }
 
-    public void playSound(){
+    public void playSound() {
         MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.beep);
         mp.start();
     }

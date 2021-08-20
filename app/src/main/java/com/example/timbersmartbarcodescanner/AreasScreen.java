@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,7 +32,6 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Comparator;
 
-//yo
 public class AreasScreen extends AppCompatActivity implements Serializable {
     private static final String TAG = "AreasScreen";
 
@@ -142,8 +142,8 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         setSupportActionBar(toolbar_scanning_screen);
 
         //feature for sorting on activity areas
-      //  iv1 = findViewById(R.id.Areaimage);
-     //   iv2 = findViewById(R.id.Dateimage2);
+        //  iv1 = findViewById(R.id.Areaimage);
+        //   iv2 = findViewById(R.id.Dateimage2);
 
         try {
             mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, getStocktakeFromData(mPassedStockTakeIndex).getAreaList());

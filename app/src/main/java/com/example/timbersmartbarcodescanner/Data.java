@@ -49,7 +49,7 @@ public class Data implements Serializable {
     // Used to access Data Class values on different screens,
     // If function is called when no Data object is created,
     // Then a new blank Data object is created, otherwise previously created Data object is returned
-    public static Data getDataInstance() throws Exception {
+    public static Data getDataInstance() {
         if (mData == null){
             mData = new Data();
         }

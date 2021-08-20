@@ -17,18 +17,17 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.example.timbersmartbarcodescanner.Data;
 import com.example.timbersmartbarcodescanner.R;
 import com.google.mlkit.vision.barcode.Barcode;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
@@ -43,9 +42,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class BarcodeScannerActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
-
-
-    private static final String TAG = "BarcodeScannerActivity";
     public static final String RESULT_DATA_BARCODES = "barcodes";
     public static final String RESULT_DATA_IMAGE_ID = "image";
 
@@ -60,7 +56,6 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
     private int width, height;
 
     private TextureView textureView;
-    private ImageView icBack;
     private CameraDevice camera;
     private Size size;
 
@@ -71,14 +66,10 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_barcode_scanner);
         textureView = findViewById(R.id.tv);
-        icBack = findViewById(R.id.back);
-        icBack.setOnClickListener(v -> finish());
         textureView.setSurfaceTextureListener(this);
 
         bitmapDirectory = new ContextWrapper(getApplicationContext()).getDir("bitmap_", Context.MODE_PRIVATE);
-
     }
-
 
     @Override
     public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
@@ -96,10 +87,8 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
 
     @Override
     public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
-        if (camera != null) {
-            camera.close();
-            camera = null;
-        }
+        camera.close();
+        camera = null;
         return false;
     }
 
@@ -231,22 +220,15 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
 
     private void onBarcodeRead(List<Barcode> barcodes, Bitmap capture) {
         isRunning = false;
+
         if (barcodes.isEmpty()) return;
-        int imageId = saveImage(capture);
-        String[] barcodeArr = barcodes.stream().map(Barcode::getRawValue).toArray(String[]::new);
+
         Intent intent = new Intent();
-        intent.putExtra(RESULT_DATA_BARCODES, barcodeArr);
-        intent.putExtra(RESULT_DATA_IMAGE_ID, imageId);
+        intent.putExtra(RESULT_DATA_BARCODES, barcodes.stream().map(Barcode::getRawValue).toArray(String[]::new));
+        intent.putExtra(RESULT_DATA_IMAGE_ID, saveImage(capture));
         setResult(RESULT_OK, intent);
         finish();
     }
-
-
-    public void playSound() {
-        MediaPlayer mp = MediaPlayer.create(getApplicationContext(), R.raw.beep);
-        mp.start();
-    }
-
 
     private int saveImage(Bitmap image) {
         int imageId = generateUniqueId();
@@ -279,10 +261,8 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
     }
 
     private static int generateUniqueId() {
-        // int id = Data.getDataInstance().getImageIdCount();
-        //  Data.getDataInstance().setImageIdCount(id + 1);
-        int id = com.example.timbersmartbarcodescanner.Barcode.getImageIdCount();
-        com.example.timbersmartbarcodescanner.Barcode.setImageIdCount(id + 1);
+        int id = Data.getDataInstance().getImageIdCount();
+        Data.getDataInstance().setImageIdCount(id + 1);
         return id;
     }
 }
