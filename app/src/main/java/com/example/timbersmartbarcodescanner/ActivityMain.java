@@ -34,13 +34,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 
 /*
-*   159.333 - Programming Project
-*   Timber smart Phone Barcode scanner
+*   159.333 - Programming Project Semester 2, 2021
+*   TimberSmart Phone Barcode scanner
 *
 *   Student Name / Student ID:
 *       Runyu Luo (17217478)
@@ -53,6 +55,11 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
     private static final String FILE_NAME = "timbersmart.txt";
     private static final String TAG = "ActivityMainDebug";
+
+    private BarcodeScannerDB barcodeScannerDB;
+    private AreaDAO areaDAO;
+    private BarcodeDAO barcodeDAO;
+    private StocktakeDAO stocktakeDAO;
 
     private StocktakeListAdapter mStocktakeListAdapter;
     private ListView mListView;
@@ -68,6 +75,10 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        barcodeScannerDB = BarcodeScannerDB.getDatabaseInstance(this);
+        areaDAO = barcodeScannerDB.areaDao();
+        barcodeDAO = barcodeScannerDB.barcodeDao();
+        stocktakeDAO = barcodeScannerDB.stocktakeDao();
 
         if ((checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
                 (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
@@ -183,19 +194,20 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        try {
+       /* try {
            writeFileOnInternalStorage();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
+        BarcodeScannerDB.closeDatabase();
     }
 
     private void init() throws Exception {
-        try {
+      /*  try {
             readFromFile();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }   */
         //Set up views -------------------------------
 
         mainTitle = findViewById(R.id.titleas);
@@ -213,23 +225,23 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 title.animate().scaleX(1f).scaleY(1f).alpha(1).setDuration(150);
             });
             try {
-                if (Data.getDataInstance().getStocktakeList().size() > 0) {
+                if (stocktakeDAO.getAllStocktakes().size() > 0) {
                     if((Boolean) title.getTag()) {
                         title.setTag(new Boolean(false));
                         iv.setImageResource(R.drawable.ic_baseline_arrow_downward_24);
-                        Collections.sort(Data.getDataInstance().getStocktakeList(), new Comparator<Stocktake>() {
+                        Collections.sort(stocktakeDAO.getAllStocktakes(), new Comparator<Stocktake>() {
                             @Override
                             public int compare(Stocktake t1, Stocktake t2) {
-                                return - t1.getStocktakeString().compareTo(t2.getStocktakeString());
+                                return - t1.getStocktakeName().compareTo(t2.getStocktakeName());
                             }
                         });
                     }else{
                         title.setTag(new Boolean(true));
                         iv.setImageResource(R.drawable.ic_baseline_arrow_upward_24);
-                        Collections.sort(Data.getDataInstance().getStocktakeList(), new Comparator<Stocktake>() {
+                        Collections.sort(stocktakeDAO.getAllStocktakes(), new Comparator<Stocktake>() {
                             @Override
                             public int compare(Stocktake t1, Stocktake t2) {
-                                return t1.getStocktakeString().compareTo(t2.getStocktakeString());
+                                return t1.getStocktakeName().compareTo(t2.getStocktakeName());
                             }
                         });
                     }
@@ -244,7 +256,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
         // Layout stuff----------------------------------------
         try {
-            mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, Data.getDataInstance().getStocktakeList());
+            mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
             mListView.setAdapter(mStocktakeListAdapter);
             mListView.setOnItemClickListener((adapterView, view, i, l)->{
                     try {
@@ -271,37 +283,39 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         //    StockTakeListAdapter finalStockTakeListAdapter = stockTakeListAdapter;
         mAddNewStocktake.setOnClickListener(view -> {
             String newStocktakeName = mNewStocktakeName.getText().toString();
-
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            Date date = new Date();
             try {
-                if (Data.getDataInstance().getStocktakeList().size() == 0){
+                if (stocktakeDAO.getAllStocktakes().size() == 0){
                     if(newStocktakeName.equals("")){
                         Toast.makeText(this, "Field is empty. Please enter a name for the Stocktake", Toast.LENGTH_SHORT).show();
                     } else {
-                        Data.getDataInstance().addStocktake(new Stocktake(newStocktakeName));
+                        stocktakeDAO.insertStocktake(new Stocktake(newStocktakeName, dateFormat.format(date),
+                                dateFormat.format(date), 0));
                         mStocktakeListAdapter.notifyDataSetChanged();
                         mListView.invalidateViews();
                         mNewStocktakeName.setText("");
-                        mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, Data.getDataInstance().getStocktakeList());
+                        mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
                         mListView.setAdapter(mStocktakeListAdapter);
                         mListView.invalidateViews();
                     }
                 }
                 else {
                         boolean unique = true;
-                        for (int i = 0; i < Data.getDataInstance().getStocktakeList().size(); i++) {
+                        for (int i = 0; i < stocktakeDAO.getAllStocktakes().size(); i++) {
                             if (newStocktakeName.equals("")) {
                                 unique = false;
                                 break;
                             }
-                            if (Data.getDataInstance().getStocktakeList().get(i).getStocktakeString().equals(newStocktakeName)) {
+                            if (stocktakeDAO.getAllStocktakes().get(i).getStocktakeName().equals(newStocktakeName)) {
                                 unique = false;
                                 break;
                             }
                         }
                         if (unique || mi.isChecked() && !"".equals(newStocktakeName)) {
-                            Stocktake temp = new Stocktake(newStocktakeName);
-                            Data.getDataInstance().addStocktake(temp);
-                            mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, Data.getDataInstance().getStocktakeList());
+                            stocktakeDAO.insertStocktake(new Stocktake(newStocktakeName, dateFormat.format(date),
+                                    dateFormat.format(date), 0));
+                            mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
                             mListView.setAdapter(mStocktakeListAdapter);
                             mListView.invalidateViews();
                             mNewStocktakeName.setText("");
@@ -354,9 +368,9 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         String stockTakeClicked = child.getText().toString();
 
         int index=0;
-        ArrayList<Stocktake> tempStocktakes = Data.getDataInstance().getStocktakeList();
+        ArrayList<Stocktake> tempStocktakes = new ArrayList<>(stocktakeDAO.getAllStocktakes());
         for (int i=0;i<tempStocktakes.size(); i++){
-            if (tempStocktakes.get(i).getStocktakeString().equals(stockTakeClicked)){
+            if (tempStocktakes.get(i).getStocktakeName().equals(stockTakeClicked)){
                 index = i;
                 break;
             }
@@ -387,10 +401,10 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                         }
 
                         try {
-//                            ArrayList<Stocktake> tempStocktakes = Data.getDataInstance().getStocktakeList();
-                            for (int n=0;n<getStocktake().size(); n++){
-                                if (getStocktake().get(n).getStocktakeString().equals(item)){
-                                    getStocktake().remove(n);
+                            ArrayList<Stocktake> stocktakes = new ArrayList<>(stocktakeDAO.getAllStocktakes());
+                            for (int n=0;n<stocktakes.size(); n++){
+                                if (stocktakes.get(n).getStocktakeName().equals(item)){
+                                    stocktakeDAO.delete(stocktakes.get(n));
                                     update();
                                     return;
                                 }
@@ -410,12 +424,11 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     }
 
     //this function is to return the stocktake
-    public ArrayList<Stocktake> getStocktake() throws Exception {
-        return Data.getDataInstance().getStocktakeList();
-    }
 
     //this function is to update the stocktake
     public void update(){
+        StocktakeListAdapter temp = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
+        mStocktakeListAdapter = temp;
         mStocktakeListAdapter.notifyDataSetChanged();
         mListView.invalidateViews();
         checkIfThereAreAnyStocktakes();
@@ -433,22 +446,22 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         StringBuilder data = new StringBuilder();
         data.append("Area, Barcode");
 
-        // Get data from selected stocktake
-        Stocktake stocktake = Data.getDataInstance().getStockTake(position);
-        ArrayList<Area> areaList = stocktake.getAreaList();
+        // Get data from selected stocktake -- data is retrieved from database
+        Stocktake stocktake = stocktakeDAO.getAllStocktakes().get(position);
+        ArrayList<Area> areaList = new ArrayList<>(areaDAO.getAreasForStocktake(stocktake.getStocktakeID()));
         for(int i = 0; i < areaList.size(); i++) {
             Area area = areaList.get(i);
-            ArrayList<Barcode> barcodeList = area.getBarcodeList();
+            ArrayList<Barcode> barcodeList = new ArrayList<>(barcodeDAO.getBarcodesForArea(area.getAreaID()));
             for(int j = 0; j < barcodeList.size(); j++) {
                 Barcode barcode = barcodeList.get(j);
-                data.append("\n" + area.getAreaString() + ',' + barcode.getBarcode());
+                data.append("\n" + area.getAreaName() + ',' + barcode.getBarcodeString());
             }
         }
 
         try {
             // Generating file name e.g. Stocktake_5.csv
             // Uses name to create file as well
-            String fileSaveName = "Stocktake_" + stocktake.getStocktakeString() + ".csv";
+            String fileSaveName = "Stocktake_" + stocktake.getStocktakeName() + ".csv";
             FileOutputStream out = openFileOutput(fileSaveName, Context.MODE_PRIVATE);
             out.write(data.toString().getBytes());
             out.close();
@@ -473,11 +486,11 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     @Override
     protected void onPause() {
         super.onPause();
-        try {
+       /* try {
             writeFileOnInternalStorage();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     @Override
@@ -490,7 +503,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         }
     }
 
-    public void writeFileOnInternalStorage() throws Exception {
+   /* public void writeFileOnInternalStorage() throws Exception {
         File path = getApplicationContext().getExternalFilesDir(null);
         File file = new File(path, "my-file-name.txt");
         FileOutputStream stream = new FileOutputStream(file);
@@ -585,7 +598,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
     /* This function will return the first item found in quotations as the first parameter
     * It returns the rest of the contents as a second parameter*/
-    private String[] getQuotesString(String contents) {
+   /* private String[] getQuotesString(String contents) {
         String[] newContents = new String[2];
         StringBuilder firstItem = new StringBuilder();
         int i = 1; //Starts at 1 to skip the first "
@@ -596,5 +609,5 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         newContents[0] = firstItem.toString();
         newContents[1] = contents.substring(i+1);//+1 to remove the end "
         return newContents;
-    }
+    } */
 }

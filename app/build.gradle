@@ -73,6 +73,7 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.room:room-runtime:2.2.5'
 
     androidTestCompile('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
@@ -88,4 +89,5 @@ dependencies {
     implementation 'com.google.mlkit:barcode-scanning:16.1.1'
 
     implementation 'com.journeyapps:zxing-android-embedded:3.4.0'
+    annotationProcessor 'androidx.room:room-compiler:2.2.5'
 }

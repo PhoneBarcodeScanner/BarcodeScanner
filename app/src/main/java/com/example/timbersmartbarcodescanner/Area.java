@@ -1,59 +1,55 @@
 package com.example.timbersmartbarcodescanner;
 
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
+
 import java.util.Date;
 
-public class Area implements Serializable {
-    private ArrayList<Barcode> mBarcodeList;
-    private String mAreaString, mDate;
-    private int mPreCount;
+import static androidx.room.ForeignKey.CASCADE;
+
+@Entity (foreignKeys = {@ForeignKey(entity = Stocktake.class,
+        parentColumns = "stk_id",
+        childColumns = "stocktake_id", onDelete = CASCADE)},
+        indices ={@Index(value = { "stocktake_id"})})
+
+public class Area {
+    @PrimaryKey(autoGenerate = true)
+    public long are_id;
+
+    public long stocktake_id; // foreign key
+
+   // public long bcd_id;
+    @ColumnInfo(name = "are_name")
+    public String areaName;
+
+    @ColumnInfo(name = "are_date")
+    public String areaDate;
+
+    @ColumnInfo(name = "are_pre_count")
+    public int areaPreCount;
+
+    @ColumnInfo(name = "are_num_of_barcodes")
+    public int numOfBarcodes;
+
+    // getters for attributes //
+    long getAreaID() { return are_id; }
+    String getAreaName() { return areaName; }
+    String getAreaDate() { return areaDate; }
+    int getAreaPreCount() { return areaPreCount; }
+    int getNumOfBarcodes() { return numOfBarcodes; }
+
+    //
 
 
-    public Area(String areaString) {
-        mAreaString = areaString;
-        //SimpleDateFormat formatter =  new SimpleDateFormat("dd/MM/yyyy HH:mm")
-        SimpleDateFormat formatter =  new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        Date date = new Date();
-        mDate = formatter.format(date);
-        mBarcodeList = new ArrayList<>();
-        mPreCount = 0;
-    }
-
-    public Area(String name, String date, String preCount) {
-        mAreaString = name;
-        mDate = date;
-        mBarcodeList = new ArrayList<Barcode>();
-        mPreCount = Integer.parseInt(preCount);
-    }
-
-    public String getAreaString() { return mAreaString; }
-    public void setAreaString(String areaString) {
-        mAreaString = areaString;
-    }
-
-    public String getDate() {
-        return mDate;
-    }
-    public void setDate(String mDate) {
-        this.mDate = mDate;
-    }
-
-    public ArrayList<Barcode> getBarcodeList() {
-        return mBarcodeList;
-    }
-    public void setBarcodeList(ArrayList<Barcode> barcodeList) {
-        mBarcodeList = barcodeList;
-    }
-
-    public void addBarcode(Barcode barcode) { mBarcodeList.add(0, barcode); }
-
-    public int getPreCount() {
-        return mPreCount;
-    }
-
-    public void setPreCount(int preCount) {
-     mPreCount = preCount;
+    public Area (long stocktake_id, String areaName, String areaDate, int areaPreCount, int numOfBarcodes) {
+        this.stocktake_id = stocktake_id;
+        this.areaName = areaName;
+        this.areaDate = areaDate;
+        this.areaPreCount = areaPreCount;
+        this.numOfBarcodes = numOfBarcodes;
+       // this.bcd_id = 0;
     }
 }

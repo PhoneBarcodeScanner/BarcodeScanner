@@ -49,8 +49,12 @@ import java.util.Date;
 public class ScanningScreen extends AppCompatActivity implements Serializable {
 
     private static final String TAG = "ScanningScreen";
-    
-    private Area area;
+
+    private Stocktake parentStocktake;
+    private Area parentArea;
+    private BarcodeDAO barcodeDAO;
+    private AreaDAO areaDAO;
+    private StocktakeDAO stocktakeDAO;
     
     private int mCountGlobal, mPreCountGlobal;
     private TextView mCount, mDifference, mArea_title, mt_Barcode, mt_Row, mt_Count, mt_Date;
@@ -82,29 +86,37 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
 //        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         toolbar_scanning_screen = (Toolbar) findViewById(R.id.ScanningScreenToolBar);
         setSupportActionBar(toolbar_scanning_screen);
-
+        barcodeDAO = BarcodeScannerDB.getDatabaseInstance(this).barcodeDao();
+        areaDAO = BarcodeScannerDB.getDatabaseInstance(this).areaDao();
+        stocktakeDAO = BarcodeScannerDB.getDatabaseInstance(this).stocktakeDao();
         //grab Area object from AreaScreen
         Intent intent = getIntent();
         mPassedAreaIndex = intent.getIntExtra("Area Index", -1);
         mPassedStocktakeIndex = intent.getIntExtra("Stocktake Index", -1);
-        area = Data.getDataInstance().getStocktakeList().get(mPassedStocktakeIndex).getAreaList().get(mPassedAreaIndex);
+        if(mPassedStocktakeIndex != -1) {
+            parentStocktake = stocktakeDAO.getAllStocktakes().get(mPassedStocktakeIndex);
+        }
+        if(mPassedAreaIndex != -1) {
+            parentArea = areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(mPassedAreaIndex);
+        }
 
         //get directory path to the bitmap storage location
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         bitmapDirectory = cw.getDir("bitmap_", Context.MODE_PRIVATE);
 
         //get the current imageUniqueId that a new image can be stored under
-        try {
-            imageUniqueId = Data.getDataInstance().getImageIdCount();
+      /*  try {
+           // imageUniqueId = Data.getDataInstance().getImageIdCount();
+            imageUniqueId = Barcode.getImageIdCount();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }   */
 
 
         try {
             //set title for scanning screen
             mArea_title = findViewById(R.id.textViewTitle);
-            mArea_title.setText(area.getAreaString() + "'s Barcodes");
+            mArea_title.setText(parentArea.getAreaName() + "'s Barcodes");
             init();
             //Animation code for barcode titles removed from here
         } catch (Exception e) {
@@ -146,10 +158,6 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         mListView.invalidateViews();
     }
 
-    // Small function to help prevent long lines of code when accessing Data class
-    public Stocktake getStocktakeFromData(int i) throws Exception {
-        return Data.getDataInstance().getStocktakeList().get(i);
-    }
 
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
@@ -248,8 +256,8 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                                 if (!"".equals(editText.getText().toString())) {
                                     ArrayList<Barcode> temp = new ArrayList<Barcode>();
                                     try {
-                                        for (Barcode b : area.getBarcodeList()) {
-                                            if (b.getBarcode().equals(editText.getText().toString())) {
+                                        for (Barcode b : barcodeDAO.getBarcodesForArea(parentArea.getAreaID())) {
+                                            if (b.getBarcodeString().equals(editText.getText().toString())) {
                                                 temp.add(b);
                                                 break;
                                             }
@@ -273,7 +281,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                         .show();
             } else {
                 try {
-                    mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, area.getBarcodeList(), duplicationEnabled);
+                    mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -292,11 +300,11 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         // Set this to be the value passed from area
         // or just count how many barcodes are currently in array
         int s = 0;
-        for (Barcode b : area.getBarcodeList()) {
-            s = s + Integer.parseInt(b.getCount());
+        for (Barcode b : barcodeDAO.getBarcodesForArea(parentArea.getAreaID())) {
+            s = s + b.getBarcodeCount();
         }
         mCountGlobal = s;
-        mPreCountGlobal = area.getPreCount();
+        mPreCountGlobal = parentArea.getAreaPreCount(); // parent area holds precount of barcodes
 
         mCount.setText(String.valueOf(mCountGlobal));
         mPreCount.setHint("Enter PreCount");
@@ -304,7 +312,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
 
         mPreCount.setText(String.valueOf(mPreCountGlobal));
 
-        mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, area.getBarcodeList(), duplicationEnabled);
+        mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
         mListView.setAdapter(mBarcodeListAdapter);
 
         // When enter is pressed, adds on a \n character
@@ -333,7 +341,8 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
 
             mPreCountGlobal = tempPreCount;
             try {
-                area.setPreCount(tempPreCount);
+               // area.setPreCount(tempPreCount);
+                int temp =areaDAO.updatePreCount(parentArea.getAreaID(),tempPreCount);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -373,6 +382,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                 boolean unique = true;
                 String temp = barcodeEditable.toString();
                 if (temp.contains("\n")) {
+
                     // Only shorten barcode if it had more then just \n
                     if (temp.length() > 0) {
                         temp = temp.substring(0, temp.length() - 1);
@@ -411,6 +421,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                 }
             }
         };
+        mBarcode.addTextChangedListener(barcodeTextWatcher);
 
     }
 
@@ -446,30 +457,44 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
 
         //Check to see if the barcode doesn't exist before adding.
         boolean unique = true;
-        for (int i = 0; i < area.getBarcodeList().size(); i++) {
-            if (area.getBarcodeList().get(i).getBarcode().equals(barcode)) {
+        for (int i = 0; i < barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).size(); i++) {
+            if (barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).get(i).getBarcodeString().equals(barcode)) {
                 unique = false;
                 break;
             }
         }
-
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        Date date = new Date();
         if (unique || mi.isChecked()) {//if the barcode is unique
             mCountGlobal++;
             int x = 0;
-            for (Barcode b : area.getBarcodeList()) {
-                if (b.getBarcode().equals(barcode)) {
-                    x = Integer.parseInt(b.getCount());
+            for (Barcode b : barcodeDAO.getBarcodesForArea(parentArea.getAreaID())) {
+                if (b.getBarcodeString().equals(barcode)) {
+                    x = b.getBarcodeCount();
                     x++;
-                    b.setCount("" + x);
-                    b.setDateTime(new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date()));
-                    b.setBitmapId(bitmapId);
+                   // b.setCount("" + x);
+                    int temp5 = barcodeDAO.updateBarcodeCount(x, b.getBarcodeID());
+                    temp5 = barcodeDAO.updateBarcodeDate(dateFormat.format(new Date()), b.getBarcodeID());
+                   // b.setBitmapId(bitmapId);
+                    String tempBitmapID = b.getBitmapID() + bitmapId + ",";
+                    temp5 =barcodeDAO.updateBitmapID(tempBitmapID, b.getBarcodeID());
                     break;
                 }
             }
-            if (x == 0) {
-                area.addBarcode(new Barcode(barcode, area.getAreaString(), 1, bitmapId));
-            }
-            writeFileOnInternalStorage();
+            if (x == 0) {   // unique barcode //
+               // area.addBarcode(new Barcode(barcode, area.getAreaString(), 1, bitmapId));
+                Barcode newBarcode = new Barcode(parentArea.getAreaID(), barcode, dateFormat.format(new Date()),
+                        1, bitmapId+",");
+                barcodeDAO.insertBarcode(newBarcode);
+                mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
+                mListView.setAdapter(mBarcodeListAdapter);
+                update();
+               // int temp5 = areaDAO.updateBarcodeID(parentArea.getAreaID(), newBarcode.getBarcodeID());
+            } // update parents...//
+            int temp5 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), dateFormat.format(date));
+            int tempCount = parentArea.getNumOfBarcodes() + 1; // increment number of barcodes in area
+            temp5 = areaDAO.updateNumOfBarcodes(parentArea.getAreaID(), tempCount);
+            //writeFileOnInternalStorage();
         } else {
             Toast.makeText(this, "Barcode ignored, already exists in system", Toast.LENGTH_LONG).show();
         }
@@ -499,26 +524,44 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                         String item = child.getText().toString();
                         Toast.makeText(ScanningScreen.this, item + " deleted", Toast.LENGTH_LONG).show();
                         try {
-                            for (int n = 0; n < area.getBarcodeList().size(); n++) {
-                                Barcode barcode = area.getBarcodeList().get(n);
-                                if (barcode.getBarcode().equals(item)) {
+                            for (int n = 0; n < barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).size(); n++) {
+                                Barcode barcode = barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).get(n);
+                                if (barcode.getBarcodeString().equals(item)) {
                                     int bitmapId;
-                                    if (barcode.getCount().equals("1")) {
-                                        bitmapId = barcode.getBitmapIdArrayList().get(0);//delete the only entry at index 0
-                                        area.getBarcodeList().remove(n);
+                                    if (barcode.getBarcodeCount() == 1) {
+                                        //bitmapId = barcode.getBitmapIdArrayList().get(0);//delete the only entry at index 0
+                                        String[] bitmapIDs = barcode.getBitmapID().split(",");
+                                        bitmapId = Integer.parseInt(bitmapIDs[0]); // get first bitmap id
+                                        //area.getBarcodeList().remove(n);
+                                        barcodeDAO.delete(barcode); /// delete barcode from database
+                                        mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
+                                        mListView.setAdapter(mBarcodeListAdapter);
+                                        update();
                                     } else {
-                                        int x = Integer.parseInt(barcode.getCount());
+                                        int x = barcode.getBarcodeCount();
                                         x--;
-                                        barcode.setCount("" + x); //decrease count
+                                       // barcode.setCount("" + x); //decrease count
+                                        int temp5 = barcodeDAO.updateBarcodeCount(x, barcode.getBarcodeID()); // update barcode count for specific barcode
                                         //delete one image instance first or last entry in array list???
-                                        ArrayList<Integer> bitmapIdArray = barcode.getBitmapIdArrayList();
+                                    /*    ArrayList<Integer> bitmapIdArray = barcode.getBitmapIdArrayList();
                                         int bitmapIndex = bitmapIdArray.size() - 1;//get last index to delete from???
                                         bitmapId = barcode.getBitmapIdArrayList().get(bitmapIndex);
-                                        barcode.deleteOneBitmapId(bitmapIndex); //??
+                                        barcode.deleteOneBitmapId(bitmapIndex); //??    */
+                                        /// deleting first bitmap instance from bitmapID string:
+                                        String[] bitmapIDs = barcode.getBitmapID().split(",");
+                                        bitmapId = Integer.parseInt(bitmapIDs[0]); // delete first bitmapID
+                                        // update bitmapID string using substring method.
+                                        int beginIndex = bitmapIDs[0].length() + 1; // need to start substring passed the "," of old bitmapID
+                                        String newBitmapIDs = barcode.getBitmapID().substring(beginIndex);
+                                        temp5 = barcodeDAO.updateBitmapID(newBitmapIDs, barcode.getBarcodeID()); // update database entry
                                     }
+                                    int temp5 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), // update stocktake modified date
+                                            new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date()));
+                                    int tempBarcodeCount = parentArea.getNumOfBarcodes() - 1; // decrement total barcode count
+                                    temp5 = areaDAO.updateNumOfBarcodes(parentArea.getAreaID(), tempBarcodeCount); // update database entry
                                     mCountGlobal--;
                                     calculateDifference();
-                                    writeFileOnInternalStorage();
+                                //    writeFileOnInternalStorage();
                                     view.getId();
                                     update();
 
@@ -550,9 +593,9 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
 
         Barcode barcode = null;
         try {
-            for (int n = 0; n < area.getBarcodeList().size(); n++) {
-                if (area.getBarcodeList().get(n).getBarcode().equals(barcodeName)) {
-                    barcode = area.getBarcodeList().get(n);
+            for (int n = 0; n < barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).size(); n++) {
+                if (barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).get(n).getBarcodeString().equals(barcodeName)) {
+                    barcode = barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).get(n);
                     break;
                 }
             }
@@ -561,7 +604,11 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         }
 
         if (barcode != null) {
-            ArrayList<Integer> bitmapIdArray = barcode.getBitmapIdArrayList(); //getting photos to display
+            ArrayList<Integer> bitmapIdArray = new ArrayList<>(); //getting photos to display
+            String[] bitmapIds = barcode.getBitmapID().split(",");
+            for (String bitmap : bitmapIds) { // need to add string bitmapIDs to integer ArrayList
+                bitmapIdArray.add(Integer.parseInt(bitmap));
+            }
             ArrayList<Integer> arrayNoZeroIds = new ArrayList<>(); //removing any manual barcode entries not scanned via camera
             boolean containsBitmap = false;
 
@@ -576,9 +623,9 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                 if (1 == arrayNoZeroIds.size()) {
                     last = true; //only one image stored
                 }
-                displayImageInAlertDialog(arrayNoZeroIds, 0, last, barcode.getBarcode());
+                displayImageInAlertDialog(arrayNoZeroIds, 0, last, barcode.getBarcodeString());
             } else {
-                Toast.makeText(ScanningScreen.this, "No image found for: " + barcode.getBarcode(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ScanningScreen.this, "No image found for: " + barcode.getBarcodeString(), Toast.LENGTH_LONG).show();
             }
         } else {
             showToast("No barcode found");
@@ -632,7 +679,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
     protected void onPause() {
         super.onPause();
         try {
-            writeFileOnInternalStorage();
+            //writeFileOnInternalStorage();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -662,6 +709,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        BarcodeScannerDB.closeDatabase();
     }
 
     public void playSound() {
@@ -669,7 +717,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         mp.start();
     }
 
-    public void writeFileOnInternalStorage() throws Exception {
+  /*  public void writeFileOnInternalStorage() throws Exception {
         File path = getApplicationContext().getExternalFilesDir(null);
         File file = new File(path, "my-file-name.txt");
         FileOutputStream stream = new FileOutputStream(file);
@@ -679,7 +727,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         } finally {
             stream.close();
         }
-    }
+    }   */
 
     // Camera and usbCameraActivity Methods/classes
     // Documentation for Library can be found here - https://github.com/jiangdongguo/AndroidUSBCamera#readme

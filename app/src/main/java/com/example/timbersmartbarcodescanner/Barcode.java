@@ -1,91 +1,61 @@
 package com.example.timbersmartbarcodescanner;
 
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Ignore;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
 
-public class Barcode implements Serializable {
-    private String mBarcodeString = "";
-    private String mDateTime = "";
-    private String mArea = "";
-    private String mCount = "";
-    private ArrayList<Integer> mBitmapIdArrayList;
+import java.time.LocalDateTime;
 
-    //Constructors
-    //new barcode from ScanningScreen.java
-    public Barcode(String barcodeString, String area, int count, int bitmapId) {
-        mBarcodeString = barcodeString;
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        Date date = new Date();
-        mDateTime = formatter.format(date);
-        mArea = area;
-        mCount = "" + count;
-        mBitmapIdArrayList = new ArrayList<>();
-        mBitmapIdArrayList.add(bitmapId);
-    }
+import static androidx.room.ForeignKey.CASCADE;
 
-    //get barcode from txt file from ActivityMain.java
-    public Barcode(String barcode, String date, String area, String count, String bitmapIds) {
-        this.mBarcodeString = barcode;
-        this.mDateTime = date;
-        this.mArea = area;
-        this.mCount = count;
-        mBitmapIdArrayList = new ArrayList<>();
-        String[] stringIds = bitmapIds.split(", ");
-        for (int i = 0; i < stringIds.length; i++) {
-            int id = Integer.parseInt(stringIds[i]);
-            mBitmapIdArrayList.add(id);
-        }
-    }
+@Entity (foreignKeys = {@ForeignKey(entity = Area.class,
+        parentColumns = "are_id",
+        childColumns = "area_id", onDelete = CASCADE)},
+        indices = {@Index("area_id")})
 
-    public String getCount() {
-        return mCount;
-    }
+public class Barcode {
+    @PrimaryKey(autoGenerate = true)
+    public long bcd_id;
 
-    public void setCount(String count) {
-        mCount = count;
-    }
+    public long area_id; // column name is the same as field name - Foreign key
 
-    public String getArea() {
-        return mArea;
-    }
+    @ColumnInfo(name = "bcd_string")
+    public String barcodeString;
 
-    public void setArea(String area) {
-        mArea = area;
-    }
+    @ColumnInfo(name = "bcd_date_time")
+    public String barcodeDateTime;
 
-    // Getters and setters
-    public String getBarcode() {
-        return mBarcodeString;
-    }
+    @ColumnInfo(name = "bcd_area_name")
+    public String barcodeAreaName;
 
-    public void setBarcode(String barcode) {
-        mBarcodeString = barcode;
-    }
+    @ColumnInfo(name = "bcd_count")
+    public int barcodeCount; // records how many duplicate barcodes exist
 
-    public String getDateTime() {
-        return mDateTime;
-    }
+    @ColumnInfo(name = "bcd_bmap_id")
+    public String bitmapID;    // string will be used with "," to delimit between different bitmapIDs
 
-    public void setDateTime(String dateTime) {
-        mDateTime = dateTime;
-    }
+    @Ignore // annotation to ignore field and not count it as part of the Barcode entity
+    private static int imageIdCount = 1;        // used for bitmap ID generation....not part of database
+    public static int getImageIdCount() { return imageIdCount; }
+    public static void setImageIdCount(int count) { imageIdCount = count; }
 
-    public void setBitmapId(int mBitmapid) {
-        this.mBitmapIdArrayList.add(mBitmapid);
-    }
+    // getters for columns //
+    long getBarcodeID() { return bcd_id; }
+    String getBarcodeString() { return barcodeString; }
+    String getBarcodeDateTime() { return barcodeDateTime; }
+    String getBarcodeAreaName() { return barcodeAreaName; }
+    int getBarcodeCount() { return barcodeCount; }
+    String getBitmapID() { return bitmapID; }
 
-    public void deleteOneBitmapId(int index) {
-        this.mBitmapIdArrayList.remove(index);
-    }
+    Barcode(long area_id, String barcodeString, String barcodeDateTime, int barcodeCount, String bitmapID) {
+        this.area_id = area_id;
+        this.barcodeString = barcodeString;
+        this.barcodeDateTime = barcodeDateTime;
+        this.barcodeCount = barcodeCount;
+        this.bitmapID = bitmapID;
 
-    public ArrayList<Integer> getBitmapIdArrayList() {
-        return mBitmapIdArrayList;
-    }
-
-    public String getBitmapIdArrayToString() {
-        String idString = mBitmapIdArrayList.toString();
-        return idString.substring(1,idString.length()-1); //returns 1,2,3 or 1 removes []
     }
 }

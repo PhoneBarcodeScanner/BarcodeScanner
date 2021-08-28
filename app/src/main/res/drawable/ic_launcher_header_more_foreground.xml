@@ -2,7 +2,8 @@
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportHeight="108"
+    android:tint="@color/cardview_dark_background">
   <group android:scaleX="3.132"
       android:scaleY="3.132"
       android:translateX="16.416"

@@ -91,7 +91,7 @@ public class Data implements Serializable {
 
     // Used in when saving Data Class to file
     // Turns data into text that can be read by readfile function
-    public String ToString() {
+  /*  public String ToString() {
         StringBuilder data;
         data = new StringBuilder("\"START-OF-TIMBER-SMART-DATA\"");
         data.append("\"").append(imageIdCount).append("\""); //current count for unique barcode image id
@@ -120,5 +120,5 @@ public class Data implements Serializable {
         }
         data.append("\"END-OF-TIMBER-SMART-DATA\"");
         return data.toString();
-    }
+    }*/
 }

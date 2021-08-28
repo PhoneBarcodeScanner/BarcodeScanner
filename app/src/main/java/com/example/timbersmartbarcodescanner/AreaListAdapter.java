@@ -34,8 +34,8 @@ public class AreaListAdapter extends ArrayAdapter {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         Area location  = (Area) getItem(position);
         String Area, Date;
-        Area = location.getAreaString();
-        Date = location.getDate();
+        Area = location.getAreaName();
+        Date = location.getAreaDate();
 
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);

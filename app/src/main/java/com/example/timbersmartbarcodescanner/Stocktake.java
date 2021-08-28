@@ -1,90 +1,40 @@
 package com.example.timbersmartbarcodescanner;
 
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
+
 import java.util.Date;
 
-public class Stocktake implements Serializable{
-    /*
-    * mStocktakeString  -- Stocktakes name
-    * mAreaList         -- List of areas belonging to stocktake
-    * mDateCreated      -- Date stocktake was created
-    * mDateModified     -- Date stocktake was last edited
-     */
-    private String mStocktakeString = "";
-    private ArrayList<Area> mAreaList;
-    private String mDateModified = "Not Currently Used";
-    private String mDateCreated = "Not Currently Used";
+@Entity()
+public class Stocktake {
+    @PrimaryKey(autoGenerate = true)
+    public long stk_id;
 
-    // Constructors
-    public Stocktake(String stocktakeString) {
-        mStocktakeString = stocktakeString;
-        mAreaList = new ArrayList<>();
-    }
+  //  public long are_id;
+    @ColumnInfo(name = "stk_name")
+    public String stocktakeName;
 
-    public Stocktake(String stocktakeString, ArrayList<Area> areaList) {
-        mStocktakeString = stocktakeString;
-        mAreaList = areaList;
-    }
+    @ColumnInfo(name = "stk_date_created")
+    public String stocktakeDateCreated;
 
-    public Stocktake(String name, String datecreated, String dmodified) {
-        this.mStocktakeString = name;
-        this.mDateCreated = datecreated;
-        this.mDateModified = dmodified;
-        mAreaList = new ArrayList<Area>();
-    }
+    @ColumnInfo(name = "stk_date_mod")
+    public String stocktakeDateMod;
 
-    // Getters and setters
-    public String getStocktakeString() {
-        return mStocktakeString;
-    }
+    @ColumnInfo(name = "stk_num_of_areas") // number of areas in a stocktake
+    public int numOfAreas; // updated every time an area is added to a stocktake
 
-    public void setStocktakeString(String stockTakeString) {
-        mStocktakeString = stockTakeString;
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        Date date = new Date();
-        mDateCreated = formatter.format(date);
-        mDateModified = formatter.format(date);
+    // getters for attributes //
+    long getStocktakeID() { return stk_id; }
+    String getStocktakeName() { return stocktakeName; }
+    int getNumOfAreas() { return numOfAreas; }
 
-    }
-    public void setStocktakeName(String stocktakeString, ArrayList<Area> areaList) {
-        mStocktakeString = stocktakeString;
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        Date date = new Date();
-        mDateCreated = formatter.format(date);
-        mDateModified = formatter.format(date);
-        mAreaList = areaList;
-    }
-
-
-    public ArrayList<Area> getAreaList() {
-        return mAreaList;
-    }
-    public Area getAreaAtPosition(int i) {
-        return mAreaList.get(i);
-    }
-
-    public void addArea(Area area) {
-        mAreaList.add(0, area);
-    }
-    public void setAreaList(ArrayList<Area> areaList) {
-        mAreaList = areaList;
-    }
-
-    public String getDateCreated() {
-        return mDateCreated;
-    }
-
-    public void setDateCreated(String dateCreated) {
-        mDateCreated = dateCreated;
-    }
-
-    public String getDateModified() {
-        return mDateModified;
-    }
-
-    public void setDateModified(String dateModified) {
-        mDateModified = dateModified;
+    public Stocktake (String stocktakeName, String stocktakeDateCreated, String stocktakeDateMod, int numOfAreas) {
+        this.stocktakeName = stocktakeName;
+        this.stocktakeDateCreated = stocktakeDateCreated;
+        this.stocktakeDateMod = stocktakeDateMod;
+        this.numOfAreas = numOfAreas;
+       // this.are_id = 0;
     }
 }

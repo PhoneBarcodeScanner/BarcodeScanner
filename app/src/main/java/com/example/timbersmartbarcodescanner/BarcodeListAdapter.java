@@ -44,10 +44,10 @@ public class BarcodeListAdapter extends ArrayAdapter {
         }
 
         Barcode barcode = (Barcode) getItem(position);
-        String barcodeDetails = barcode.getBarcode();
-        String dateTime = barcode.getDateTime();
+        String barcodeDetails = barcode.getBarcodeString();
+        String dateTime = barcode.getBarcodeDateTime();
         //String area = barcode.getArea();
-        String count = barcode.getCount();
+        String count = String.valueOf(barcode.getBarcodeCount());
 
         //Shrink date so it doesn't go offscreen
         TextView textViewDate = convertView.findViewById(R.id.SSLVDate);

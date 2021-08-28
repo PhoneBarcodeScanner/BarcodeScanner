@@ -29,8 +29,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 
 public class AreasScreen extends AppCompatActivity implements Serializable {
     private static final String TAG = "AreasScreen";
@@ -46,6 +49,9 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     private Toolbar toolbar_scanning_screen;
     private LinearLayout mHintLayoutTab;
 
+    private AreaDAO areaDAO;
+    private StocktakeDAO stocktakeDAO;
+    private Stocktake parentStocktake;
 
 
     public void goHome(View view){
@@ -128,12 +134,16 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_areas_screen);
-
+        areaDAO = BarcodeScannerDB.getDatabaseInstance(this).areaDao();
+        stocktakeDAO = BarcodeScannerDB.getDatabaseInstance(this).stocktakeDao();
         // This screen constructs when we have clicked on a stocktake, so we need to retrieve
         // that specific stock take it is passed an integer of the index.
         // Called when returning from barcode screen
         Intent intent = getIntent();
         mPassedStockTakeIndex = intent.getIntExtra("Stocktake", -1);
+        if (mPassedStockTakeIndex != -1) { // get stocktake object the areas belong to
+            parentStocktake = stocktakeDAO.getAllStocktakes().get(mPassedStockTakeIndex);
+        }
         asort = 0;
 
         mListView = findViewById(R.id.rowListView);
@@ -146,7 +156,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         //   iv2 = findViewById(R.id.Dateimage2);
 
         try {
-            mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, getStocktakeFromData(mPassedStockTakeIndex).getAreaList());
+            mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
             mListView.setAdapter(mAreaListAdapter);
             mListView.setOnItemClickListener((adapterView, view, i, l)->{
                 try {
@@ -157,7 +167,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
             });
 
             mArea_title=findViewById(R.id.area_title);
-            mArea_title.setText(getStocktakeFromData(mPassedStockTakeIndex).getStocktakeString()+"’s Areas");
+            mArea_title.setText(parentStocktake.getStocktakeName()+"’s Areas");
 
             mNewAreaName = findViewById(R.id.rowsAddAreaEdit);
 
@@ -171,17 +181,26 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                     String areaName = mNewAreaName.getText().toString();
 
                     if(!mNewAreaName.getText().toString().equals("")){
-                        for (int i = 0; i < getStocktakeFromData(mPassedStockTakeIndex).getAreaList().size(); i++) {
-                            if (getStocktakeFromData(mPassedStockTakeIndex).getAreaList().get(i).getAreaString().equals(areaName)){
+                        for (int i = 0; i < areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).size(); i++) {
+                            if (areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(i).getAreaName().equals(areaName)){
                                 unique = false;
                             }
                         }
 
                         if (unique || mi.isChecked() && !"".equals(areaName)) {
-                            Area mArea = new Area(areaName);
-                            getStocktakeFromData(mPassedStockTakeIndex).addArea(mArea);
-                            mNewAreaName.setText("");
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                            Date date = new Date();
+                            Area mArea = new Area(parentStocktake.getStocktakeID(), areaName, dateFormat.format(date),
+                                    0, 0);
+                            areaDAO.insertArea(mArea);
+                            mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
+                            mListView.setAdapter(mAreaListAdapter);
                             update();
+                            //stocktakeDAO.updateAreaID(parentStocktake.getStocktakeID(), mArea.getAreaID());
+                            int temp = parentStocktake.getNumOfAreas() + 1; // avoiding the use of an sql query for speed
+                            int temp1 = stocktakeDAO.updateNumOfAreas(parentStocktake.getStocktakeID(), temp);
+                            temp1 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), dateFormat.format(date));
+                            mNewAreaName.setText("");
                             this.mArea.setTag(new Boolean(false));
                             mDate.setTag(new Boolean(false));
                             iv1.setImageBitmap(null);
@@ -200,6 +219,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                 catch (Exception e) {
                     e.printStackTrace();
                 }
+                update();
             });
 
             mArea = findViewById(R.id.rowLocation);
@@ -215,19 +235,19 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                     if((Boolean) mArea.getTag()) {
                         mArea.setTag(new Boolean(false));
                         iv1.setImageResource(R.drawable.ic_baseline_arrow_downward_24);
-                        Collections.sort(getStocktakeFromData(mPassedStockTakeIndex).getAreaList(), new Comparator<Area>() {
+                        Collections.sort(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()), new Comparator<Area>() {
                             @Override
                             public int compare(Area t1, Area t2) {
-                                return - t1.getAreaString().compareTo(t2.getAreaString());
+                                return - t1.getAreaName().compareTo(t2.getAreaName());
                             }
                         });
                     }else{
                         mArea.setTag(new Boolean(true));
                         iv1.setImageResource(R.drawable.ic_baseline_arrow_upward_24);
-                        Collections.sort(getStocktakeFromData(mPassedStockTakeIndex).getAreaList(), new Comparator<Area>() {
+                        Collections.sort(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()), new Comparator<Area>() {
                             @Override
                             public int compare(Area t1, Area t2) {
-                                return t1.getAreaString().compareTo(t2.getAreaString());
+                                return t1.getAreaName().compareTo(t2.getAreaName());
                             }
                         });
                     }
@@ -251,19 +271,19 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                     if((Boolean) mDate.getTag()) {
                         mDate.setTag(new Boolean(false));
                         iv2.setImageResource(R.drawable.ic_baseline_arrow_downward_24);
-                        Collections.sort(getStocktakeFromData(mPassedStockTakeIndex).getAreaList(), new Comparator<Area>() {
+                        Collections.sort(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()), new Comparator<Area>() {
                             @Override
                             public int compare(Area t1, Area t2) {
-                                return - t1.getDate().compareTo(t2.getDate());
+                                return - t1.getAreaDate().compareTo(t2.getAreaDate());
                             }
                         });
                     }else{
                         mDate.setTag(new Boolean(true));
                         iv2.setImageResource(R.drawable.ic_baseline_arrow_upward_24);
-                        Collections.sort(getStocktakeFromData(mPassedStockTakeIndex).getAreaList(), new Comparator<Area>() {
+                        Collections.sort(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()), new Comparator<Area>() {
                             @Override
                             public int compare(Area t1, Area t2) {
-                                return t1.getDate().compareTo(t2.getDate());
+                                return t1.getAreaDate().compareTo(t2.getAreaDate());
                             }
                         });
                     }
@@ -297,22 +317,17 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     }
 
 
-    // Small function to help prevent long lines of code when accessing Data class
-    public Stocktake getStocktakeFromData(int i) throws Exception {
-        return Data.getDataInstance().getStocktakeList().get(i);
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        try {
+       /* try {
             writeFileOnInternalStorage();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }   */
     }
 
-    public void writeFileOnInternalStorage() throws Exception {
+   /* public void writeFileOnInternalStorage() throws Exception {
         File path = getApplicationContext().getExternalFilesDir(null);
         File file = new File(path, "my-file-name.txt");
         FileOutputStream stream = new FileOutputStream(file);
@@ -322,7 +337,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         } finally {
             stream.close();
         }
-    }
+    }   */
 
     // On-Click listener assigned to ListViews "Add Barcode" Button
     // When clicked will open scanning screen in context to area clicked
@@ -331,8 +346,8 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         TextView child = (TextView)parent.getChildAt(0);
         String item = child.getText().toString();
         int areaIndex=0;
-        for (int i = 0; i <getStocktakeFromData(mPassedStockTakeIndex).getAreaList().size(); i++) {
-            if (getStocktakeFromData(mPassedStockTakeIndex).getAreaList().get(i).getAreaString().equals(item)) {
+        for (int i = 0; i <areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).size(); i++) {
+            if (areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(i).getAreaName().equals(item)) {
                 areaIndex = i;
             }
         }
@@ -357,9 +372,19 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
 
                         Toast.makeText(AreasScreen.this, item +" Deleted", Toast.LENGTH_LONG).show();
                         try {
-                            for (int n = 0; n <getStocktakeFromData(mPassedStockTakeIndex).getAreaList().size(); n++){
-                                if (getStocktakeFromData(mPassedStockTakeIndex).getAreaList().get(n).getAreaString().equals(item)){
-                                    getStocktakeFromData(mPassedStockTakeIndex).getAreaList().remove(n);
+                            for (int n = 0; n <areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).size(); n++){
+                                if (areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n).getAreaName().equals(item)){
+                                   // delete area from area table and update relevant parent stocktake fields
+                                    areaDAO.delete(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n));
+                                    mAreaListAdapter = new AreaListAdapter(AreasScreen.this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
+                                    mListView.setAdapter(mAreaListAdapter);
+                                    update();
+                                    int temp = parentStocktake.getNumOfAreas() - 1; // not using an sql query for speed
+                                    int temp2 =stocktakeDAO.updateNumOfAreas(parentStocktake.getStocktakeID(), temp);
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                                    Date date = new Date();
+                                    temp2 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), dateFormat.format(date));
+
                                     update();
                                     return;
                                 }
@@ -379,8 +404,15 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     }
 
     public void update(){
+        mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
         mAreaListAdapter.notifyDataSetChanged();
         mListView.invalidateViews();
         checkIfThereAreAnyAreas();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        BarcodeScannerDB.closeDatabase();
     }
 }

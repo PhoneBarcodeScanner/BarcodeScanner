@@ -24,7 +24,8 @@
             android:fontFamily="serif"
             android:gravity="center|top"
             android:textColor="@color/colorTimberSmartWhite"
-            android:textSize="40sp" />
+            android:textSize="40sp"
+            android:onClick="goHome"/>
     </androidx.appcompat.widget.Toolbar>
 
     <!--    Barcode/Enter/Counters    Layout_Weight: 10-->
@@ -47,7 +48,8 @@
                 android:textAlignment="center"
                 android:hint="@string/ScanningScreenBarcodeDefault"
                 android:importantForAutofill="no"
-                android:inputType="none">
+                android:inputType="none"
+                android:imeOptions="actionDone">
 
             </EditText>
 

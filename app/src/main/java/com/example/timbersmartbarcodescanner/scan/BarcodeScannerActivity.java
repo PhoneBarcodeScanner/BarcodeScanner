@@ -261,8 +261,10 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
     }
 
     private static int generateUniqueId() {
-        int id = Data.getDataInstance().getImageIdCount();
-        Data.getDataInstance().setImageIdCount(id + 1);
+       // int id = Data.getDataInstance().getImageIdCount();
+      //  Data.getDataInstance().setImageIdCount(id + 1);
+        int id = com.example.timbersmartbarcodescanner.Barcode.getImageIdCount();
+        com.example.timbersmartbarcodescanner.Barcode.setImageIdCount(id+1);
         return id;
     }
 }

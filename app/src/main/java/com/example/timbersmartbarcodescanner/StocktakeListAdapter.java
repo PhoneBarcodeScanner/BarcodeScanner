@@ -51,7 +51,7 @@ public class StocktakeListAdapter extends ArrayAdapter {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         Stocktake stocktake  = (Stocktake) getItem(position);
-        String stocktakeName = stocktake.getStocktakeString();
+        String stocktakeName = stocktake.getStocktakeName();
 
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);
