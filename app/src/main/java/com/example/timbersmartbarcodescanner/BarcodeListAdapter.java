@@ -22,13 +22,15 @@ public class BarcodeListAdapter extends ArrayAdapter {
     private boolean duplicationEnabled;
 
     /**
-     *   Default Constructor for the StockTakeListAdapter
-     *  @param context
-     *  @param resource
-     *  @param objects
+     * Default Constructor for the StockTakeListAdapter
+     *
+     * @param context
+     * @param resource
+     * @param objects
      */
     public BarcodeListAdapter(@NonNull Context context, int resource, @NonNull ArrayList<Barcode> objects, boolean duplicationEn) {
         super(context, resource, objects);
+        Log.i(TAG, "BarcodeListAdapter: objects==" + objects.size());
         this.mContext = context;
         this.mResource = resource;
         this.duplicationEnabled = duplicationEn;
@@ -64,7 +66,7 @@ public class BarcodeListAdapter extends ArrayAdapter {
         //textViewArea.setText(area);
 
         if (Integer.parseInt(count) > 1 /*&& !duplicationEnabled*/) {
-            int colour = Color.argb(50,200,80,80);
+            int colour = Color.argb(50, 200, 80, 80);
             tableRow.setBackgroundColor(colour);
         }
         if (Integer.parseInt(count) == 1) {

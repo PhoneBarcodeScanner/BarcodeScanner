@@ -375,6 +375,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                             for (int n = 0; n <areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).size(); n++){
                                 if (areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n).getAreaName().equals(item)){
                                    // delete area from area table and update relevant parent stocktake fields
+                                    deleteAllChildren(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n));
                                     areaDAO.delete(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n));
                                     mAreaListAdapter = new AreaListAdapter(AreasScreen.this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
                                     mListView.setAdapter(mAreaListAdapter);
@@ -401,6 +402,13 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                     }
                 })
                 .show();
+    }
+    private void deleteAllChildren(Area parentArea) {
+        BarcodeDAO barcodeDAO = BarcodeScannerDB.getDatabaseInstance(this).barcodeDao();
+        ArrayList<Barcode> barcodesInStocktake = new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID()));
+        for (Barcode barcode : barcodesInStocktake) { // delete all barcodes in each area in the parent stocktake
+            barcodeDAO.delete(barcode);
+        }
     }
 
     public void update(){

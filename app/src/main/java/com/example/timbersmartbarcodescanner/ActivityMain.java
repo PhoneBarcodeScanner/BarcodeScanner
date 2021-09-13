@@ -404,6 +404,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                             ArrayList<Stocktake> stocktakes = new ArrayList<>(stocktakeDAO.getAllStocktakes());
                             for (int n=0;n<stocktakes.size(); n++){
                                 if (stocktakes.get(n).getStocktakeName().equals(item)){
+                                    deleteAllChildren(stocktakes.get(n));
                                     stocktakeDAO.delete(stocktakes.get(n));
                                     update();
                                     return;
@@ -423,6 +424,16 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 .show();
     }
 
+    private void deleteAllChildren (Stocktake parentStocktake) { // delete all areas and barcodes of the stocktake
+        ArrayList<Area> areasInStocktake = new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()));
+        for (Area area : areasInStocktake) {
+            ArrayList<Barcode> barcodesInStocktake = new ArrayList<>(barcodeDAO.getBarcodesForArea(area.getAreaID()));
+            for (Barcode barcode : barcodesInStocktake) { // delete all barcodes in each area in the parent stocktake
+                barcodeDAO.delete(barcode);
+            }
+            areaDAO.delete(area);
+        }
+    }
     //this function is to return the stocktake
 
     //this function is to update the stocktake

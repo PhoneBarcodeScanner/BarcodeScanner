@@ -1,23 +1,39 @@
 package com.example.timbersmartbarcodescanner;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.RectF;
+import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Size;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
@@ -32,21 +48,29 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 
 import com.example.timbersmartbarcodescanner.scan.BarcodeScannerActivity;
+import com.google.mlkit.vision.barcode.BarcodeScanner;
+import com.google.mlkit.vision.barcode.BarcodeScanning;
+import com.google.mlkit.vision.common.InputImage;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.Serializable;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
-public class ScanningScreen extends AppCompatActivity implements Serializable {
+public class ScanningScreen extends AppCompatActivity implements TextureView.SurfaceTextureListener {
 
     private static final String TAG = "ScanningScreen";
 
@@ -55,7 +79,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
     private BarcodeDAO barcodeDAO;
     private AreaDAO areaDAO;
     private StocktakeDAO stocktakeDAO;
-    
+
     private int mCountGlobal, mPreCountGlobal;
     private TextView mCount, mDifference, mArea_title, mt_Barcode, mt_Row, mt_Count, mt_Date;
     private EditText mBarcode, mPreCount;
@@ -77,7 +101,11 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
      * @param mReceivedVideoDataListener received video data listener.
      */
     protected TextureView mVideoSurface = null;
+    private boolean isScanRunning;
 
+    private SwitchCompat scScan;
+    private Button btnFull;
+    private View vScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,10 +121,10 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         Intent intent = getIntent();
         mPassedAreaIndex = intent.getIntExtra("Area Index", -1);
         mPassedStocktakeIndex = intent.getIntExtra("Stocktake Index", -1);
-        if(mPassedStocktakeIndex != -1) {
+        if (mPassedStocktakeIndex != -1) {
             parentStocktake = stocktakeDAO.getAllStocktakes().get(mPassedStocktakeIndex);
         }
-        if(mPassedAreaIndex != -1) {
+        if (mPassedAreaIndex != -1) {
             parentArea = areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(mPassedAreaIndex);
         }
 
@@ -124,18 +152,18 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         }
 
         // 바코드 읽기 요청
-        findViewById(R.id.scanBtn).setOnClickListener(v -> startActivityForResult(
-                new Intent(this, BarcodeScannerActivity.class),
-                0));
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         // 바코드 읽기 결과 처리
         if (requestCode == 0) {
+            if (isScanRunning) {
+                setupCamera();
+            }
             if (resultCode != Activity.RESULT_OK || data == null) return;
-            String[] barcodes = data.getStringArrayExtra(BarcodeScannerActivity.RESULT_DATA_BARCODES);
-            int imageId = data.getIntExtra(BarcodeScannerActivity.RESULT_DATA_IMAGE_ID, -1);
+            String[] barcodes = data.getStringArrayExtra(ScanningScreen.RESULT_DATA_BARCODES);
+            int imageId = data.getIntExtra(ScanningScreen.RESULT_DATA_IMAGE_ID, -1);
 
             try {
                 onBarcodesRead(barcodes, imageId);
@@ -191,6 +219,7 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         return true;
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -242,6 +271,30 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         mConfirmPreCount = findViewById(R.id.buttonConfirmPreCount);
         mListView = findViewById(R.id.ScanningScreenListView);
         search = findViewById(R.id.buttonSearch);
+        mVideoSurface = findViewById(R.id.tvScan);
+        btnFull = findViewById(R.id.btnFull);
+        scScan = findViewById(R.id.scScan);
+        vScan = findViewById(R.id.vScan);
+        btnFull.setOnClickListener(v -> {
+            if (ScanningScreen.this.camera != null) {
+                camera.close();
+                camera = null;
+            }
+            startActivityForResult(
+                    new Intent(this, BarcodeScannerActivity.class),
+                    0);
+        });
+        vScan.setOnClickListener(v -> {
+            isScanRunning = !isScanRunning;
+            scScan.setChecked(isScanRunning);
+            if (isScanRunning && ScanningScreen.this.camera == null) {
+                setupCamera();
+            } else if (ScanningScreen.this.camera != null) {
+                camera.close();
+                camera = null;
+            }
+            Toast.makeText(this, isScanRunning ? "Start Scanning" : "Stop Scanning", Toast.LENGTH_SHORT).show();
+        });
         search.setOnClickListener(v -> {
 
             if ("".equals(search.getText())) {
@@ -291,9 +344,9 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
             }
         });
 
-        mVideoSurface = findViewById(R.id.video_previewer_surface);
+
         if (null != mVideoSurface) {
-            mVideoSurface.setSurfaceTextureListener((TextureView.SurfaceTextureListener) this);
+            mVideoSurface.setSurfaceTextureListener(ScanningScreen.this);
             //sets up the video display, interface methods are overridden below
         }
 
@@ -341,8 +394,8 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
 
             mPreCountGlobal = tempPreCount;
             try {
-               // area.setPreCount(tempPreCount);
-                int temp =areaDAO.updatePreCount(parentArea.getAreaID(),tempPreCount);
+                // area.setPreCount(tempPreCount);
+                int temp = areaDAO.updatePreCount(parentArea.getAreaID(), tempPreCount);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -472,24 +525,27 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                 if (b.getBarcodeString().equals(barcode)) {
                     x = b.getBarcodeCount();
                     x++;
-                   // b.setCount("" + x);
+                    // b.setCount("" + x);
                     int temp5 = barcodeDAO.updateBarcodeCount(x, b.getBarcodeID());
                     temp5 = barcodeDAO.updateBarcodeDate(dateFormat.format(new Date()), b.getBarcodeID());
-                   // b.setBitmapId(bitmapId);
+                    // b.setBitmapId(bitmapId);
                     String tempBitmapID = b.getBitmapID() + bitmapId + ",";
-                    temp5 =barcodeDAO.updateBitmapID(tempBitmapID, b.getBarcodeID());
+                    temp5 = barcodeDAO.updateBitmapID(tempBitmapID, b.getBarcodeID());
+                    mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
+                    mListView.setAdapter(mBarcodeListAdapter);
+                    update();
                     break;
                 }
             }
             if (x == 0) {   // unique barcode //
-               // area.addBarcode(new Barcode(barcode, area.getAreaString(), 1, bitmapId));
+                // area.addBarcode(new Barcode(barcode, area.getAreaString(), 1, bitmapId));
                 Barcode newBarcode = new Barcode(parentArea.getAreaID(), barcode, dateFormat.format(new Date()),
-                        1, bitmapId+",");
+                        1, bitmapId + ",");
                 barcodeDAO.insertBarcode(newBarcode);
                 mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
                 mListView.setAdapter(mBarcodeListAdapter);
                 update();
-               // int temp5 = areaDAO.updateBarcodeID(parentArea.getAreaID(), newBarcode.getBarcodeID());
+                // int temp5 = areaDAO.updateBarcodeID(parentArea.getAreaID(), newBarcode.getBarcodeID());
             } // update parents...//
             int temp5 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), dateFormat.format(date));
             int tempCount = parentArea.getNumOfBarcodes() + 1; // increment number of barcodes in area
@@ -528,19 +584,21 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                                 Barcode barcode = barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).get(n);
                                 if (barcode.getBarcodeString().equals(item)) {
                                     int bitmapId;
+                                    String[] bitmapIDs = barcode.getBitmapID().split(",");
+                                    bitmapId = Integer.parseInt(bitmapIDs[0]); // get first bitmap id
                                     if (barcode.getBarcodeCount() == 1) {
                                         //bitmapId = barcode.getBitmapIdArrayList().get(0);//delete the only entry at index 0
-                                        String[] bitmapIDs = barcode.getBitmapID().split(",");
-                                        bitmapId = Integer.parseInt(bitmapIDs[0]); // get first bitmap id
+                                        // String[] bitmapIDs = barcode.getBitmapID().split(",");
+                                        //  bitmapId = Integer.parseInt(bitmapIDs[0]); // get first bitmap id
                                         //area.getBarcodeList().remove(n);
                                         barcodeDAO.delete(barcode); /// delete barcode from database
-                                        mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
+                                      /*  mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
                                         mListView.setAdapter(mBarcodeListAdapter);
-                                        update();
+                                        update();   */
                                     } else {
                                         int x = barcode.getBarcodeCount();
                                         x--;
-                                       // barcode.setCount("" + x); //decrease count
+                                        // barcode.setCount("" + x); //decrease count
                                         int temp5 = barcodeDAO.updateBarcodeCount(x, barcode.getBarcodeID()); // update barcode count for specific barcode
                                         //delete one image instance first or last entry in array list???
                                     /*    ArrayList<Integer> bitmapIdArray = barcode.getBitmapIdArrayList();
@@ -548,12 +606,15 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                                         bitmapId = barcode.getBitmapIdArrayList().get(bitmapIndex);
                                         barcode.deleteOneBitmapId(bitmapIndex); //??    */
                                         /// deleting first bitmap instance from bitmapID string:
-                                        String[] bitmapIDs = barcode.getBitmapID().split(",");
-                                        bitmapId = Integer.parseInt(bitmapIDs[0]); // delete first bitmapID
+                                        // String[] bitmapIDs = barcode.getBitmapID().split(",");
+                                        //  bitmapId = Integer.parseInt(bitmapIDs[0]); // delete first bitmapID
                                         // update bitmapID string using substring method.
                                         int beginIndex = bitmapIDs[0].length() + 1; // need to start substring passed the "," of old bitmapID
                                         String newBitmapIDs = barcode.getBitmapID().substring(beginIndex);
                                         temp5 = barcodeDAO.updateBitmapID(newBitmapIDs, barcode.getBarcodeID()); // update database entry
+                                      /*  mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
+                                        mListView.setAdapter(mBarcodeListAdapter);
+                                        update();   */
                                     }
                                     int temp5 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), // update stocktake modified date
                                             new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date()));
@@ -561,8 +622,10 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
                                     temp5 = areaDAO.updateNumOfBarcodes(parentArea.getAreaID(), tempBarcodeCount); // update database entry
                                     mCountGlobal--;
                                     calculateDifference();
-                                //    writeFileOnInternalStorage();
+                                    //    writeFileOnInternalStorage();
                                     view.getId();
+                                    mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
+                                    mListView.setAdapter(mBarcodeListAdapter);
                                     update();
 
                                     File f = new File(bitmapDirectory, bitmapId + ".jpg");
@@ -717,88 +780,226 @@ public class ScanningScreen extends AppCompatActivity implements Serializable {
         mp.start();
     }
 
-  /*  public void writeFileOnInternalStorage() throws Exception {
-        File path = getApplicationContext().getExternalFilesDir(null);
-        File file = new File(path, "my-file-name.txt");
-        FileOutputStream stream = new FileOutputStream(file);
-        String stringToWriteInFile = Data.getDataInstance().ToString();
-        try {
-            stream.write(stringToWriteInFile.getBytes());
-        } finally {
-            stream.close();
-        }
-    }   */
 
-    // Camera and usbCameraActivity Methods/classes
-    // Documentation for Library can be found here - https://github.com/jiangdongguo/AndroidUSBCamera#readme
-    //
-    // Picks up on whether or not USB camera is connected or disconnected
-    // This is required for the guidance camera to work
-//    private UVCCameraHelper.OnMyDevConnectListener listener = new UVCCameraHelper.OnMyDevConnectListener() {
-//
-//        @Override
-//        public void onAttachDev(UsbDevice device) {
-//            // request open permission(must have)
-//            if (!isRequest) {
-//                isRequest = true;
-//                if (mCameraHelper != null) {
-//                    mCameraHelper.requestPermission(0);
-//                }
-//            }
-//        }
-//
-//        @Override
-//        public void onDettachDev(UsbDevice device) {
-//            // Close camera(must have)
-//            if (isRequest) {
-//                isRequest = false;
-//                mCameraHelper.closeCamera();
-//            }
-//        }
-//
-//        @Override
-//        public void onConnectDev(UsbDevice device, boolean isConnected) {
-//            if (!isConnected) {
-//                Toast.makeText(ScanningScreen.this,"Failed to connect, please check resolution parameters",Toast.LENGTH_LONG).show();
-//                isPreview = false;
-//            } else {
-//                isPreview = true;
-//                Toast.makeText(ScanningScreen.this,"Connecting",Toast.LENGTH_LONG).show();
-//            }
-//        }
-//
-//        @Override
-//        public void onDisConnectDev(UsbDevice device) {}
-//    };
-//
-//    @Override
-//    public USBMonitor getUSBMonitor() {
-//        return mCameraHelper.getUSBMonitor();
-//    }
-//
-//    @Override
-//    public void onSurfaceCreated(CameraViewInterface view, Surface surface) {
-//        // Must have
-//        if (!isPreview && mCameraHelper.isCameraOpened()) {
-//            mCameraHelper.startPreview(mUVCCameraView);
-//            isPreview = true;
-//        }
-//    }
-//
-//    @Override
-//    public void onSurfaceDestroy(CameraViewInterface view, Surface surface) {
-//        // must have
-//        if (isPreview && mCameraHelper.isCameraOpened()) {
-//            mCameraHelper.stopPreview();
-//            isPreview = false;
-//        }
-//    }
-//
-//    // Unused but needed to be overridden ==========================================================
-//    @Override
-//    public void onDialogResult(boolean canceled) {}
-//
-//    @Override
-//    public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height) {}
-//    // =============================================================================================
+    public static final String RESULT_DATA_BARCODES = "barcodes";
+    public static final String RESULT_DATA_IMAGE_ID = "image";
+
+    private static final int CAMERA_PERMISSION_REQUEST_CODE = 0;
+    private static final Matrix BITMAP_ROTATION_MATRIX = new Matrix() {{
+        postRotate(-90);
+    }};
+
+    private final BarcodeScanner scanner = BarcodeScanning.getClient();
+
+    private int width, height;
+
+    private CameraDevice camera;
+    private Size size;
+
+    private boolean isRunning = false;
+
+
+    @Override
+    public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
+        this.width = width;
+        this.height = height;
+        Log.i(TAG, "onSurfaceTextureAvailable: ");
+        if (isScanRunning) {
+            setupCamera();
+        }
+    }
+
+    @Override
+    public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
+        this.width = width;
+        this.height = height;
+        Log.i(TAG, "onSurfaceTextureSizeChanged: ");
+        if (isScanRunning) {
+            setupCamera();
+        }
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
+        camera.close();
+        camera = null;
+        return false;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+        if (isRunning) return;
+
+        isRunning = true;
+
+        Bitmap bitmap = mVideoSurface.getBitmap();
+        scanner.process(InputImage.fromBitmap(bitmap, 0))
+                .addOnSuccessListener(barcodes -> onBarcodeRead(barcodes, bitmap))
+                .addOnFailureListener(e -> isRunning = false);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+            setupCamera();
+        }
+    }
+
+    private void setupCamera() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+            return;
+        }
+
+        if (camera != null) {
+            camera.close();
+            camera = null;
+        }
+
+        CameraManager cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+
+        try {
+            String cameraId = cameraManager.getCameraIdList()[0];
+
+            CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
+            StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            size = map.getOutputSizes(SurfaceTexture.class)[0];
+
+            cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
+                @Override
+                public void onOpened(@NonNull CameraDevice camera) {
+                    ScanningScreen.this.camera = camera;
+                    SurfaceTexture surfaceTexture = mVideoSurface.getSurfaceTexture();
+                    surfaceTexture.setDefaultBufferSize(size.getWidth(), size.getHeight());
+                    Surface surface = new Surface(surfaceTexture);
+
+                    try {
+                        // Ignore deprecation inspection for android version match.
+                        //noinspection deprecation
+                        camera.createCaptureSession(Collections.singletonList(surface), new CameraCaptureSession.StateCallback() {
+                            @Override
+                            public void onConfigured(@NonNull CameraCaptureSession session) {
+                                try {
+                                    CaptureRequest.Builder captureRequestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                                    captureRequestBuilder.addTarget(surface);
+                                    captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+                                    CaptureRequest captureRequest = captureRequestBuilder.build();
+
+                                    session.setRepeatingRequest(captureRequest, null, null);
+                                } catch (CameraAccessException e) {
+                                    e.printStackTrace();
+                                }
+
+                                configureTransform(width, height);
+                            }
+
+                            @Override
+                            public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                            }
+                        }, null);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onDisconnected(@NonNull CameraDevice camera) {
+                    camera.close();
+                    ScanningScreen.this.camera = null;
+
+                }
+
+                @Override
+                public void onError(@NonNull CameraDevice camera, int error) {
+                    camera.close();
+                    ScanningScreen.this.camera = null;
+
+                }
+            }, null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void configureTransform(int viewWidth, int viewHeight) {
+        if (null == mVideoSurface || null == size) {
+            return;
+        }
+        int rotation = getDisplay().getRotation();
+        Matrix matrix = new Matrix();
+        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
+        RectF bufferRect = new RectF(0, 0, size.getHeight(), size.getWidth());
+        float centerX = viewRect.centerX();
+        float centerY = viewRect.centerY();
+        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
+            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
+            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+            float scale = Math.max(
+                    (float) viewHeight / size.getHeight(),
+                    (float) viewWidth / size.getWidth());
+            matrix.postScale(scale, scale, centerX, centerY);
+            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+        } else if (Surface.ROTATION_180 == rotation) {
+            matrix.postRotate(180, centerX, centerY);
+        }
+        mVideoSurface.setTransform(matrix);
+    }
+
+    private void onBarcodeRead(List<com.google.mlkit.vision.barcode.Barcode> barcodes, Bitmap capture) {
+        isRunning = false;
+
+        if (barcodes.isEmpty()) return;
+        for (String barcode : barcodes.stream().map(com.google.mlkit.vision.barcode.Barcode::getRawValue).toArray(String[]::new)) {
+            try {
+                saveBarcode(barcode, saveImage(capture));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private int saveImage(Bitmap image) {
+        int imageId = generateUniqueId();
+
+        File file = new File(bitmapDirectory, imageId + ".jpg");
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(bitmapToByteArray(image));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return imageId;
+    }
+
+    private static byte[] bitmapToByteArray(Bitmap bitmap) {
+        Bitmap processed = processBitmap(bitmap);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        processed.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+
+        processed.recycle();
+        return stream.toByteArray();
+    }
+
+    private static Bitmap processBitmap(Bitmap bitmap) {
+        Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), BITMAP_ROTATION_MATRIX, false);
+        Bitmap scaled = Bitmap.createScaledBitmap(rotated, rotated.getHeight(), rotated.getWidth(), false);
+        rotated.recycle();
+        return scaled;
+    }
+
+    private static int generateUniqueId() {
+        // int id = Data.getDataInstance().getImageIdCount();
+        //  Data.getDataInstance().setImageIdCount(id + 1);
+        int id = com.example.timbersmartbarcodescanner.Barcode.getImageIdCount();
+        com.example.timbersmartbarcodescanner.Barcode.setImageIdCount(id + 1);
+        return id;
+    }
 }
