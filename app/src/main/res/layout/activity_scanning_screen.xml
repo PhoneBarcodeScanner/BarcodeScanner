@@ -189,38 +189,38 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center|start"
+            android:padding="15dp"
             android:text="@string/barcode"
             android:textColor="#000"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@id/ScanningScreenListView"
-            app:layout_constraintEnd_toStartOf="@id/btnFull"
-            app:layout_constraintHorizontal_weight="4"
+            app:layout_constraintEnd_toStartOf="@id/scScan"
+            app:layout_constraintHorizontal_weight="2"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/llCount" />
 
         <Button
-            android:id="@+id/btnFull"
-            android:layout_width="0dp"
+            android:id="@+id/btnScan"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Full Screen"
+            android:text="scan"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/codeDesc"
-            app:layout_constraintBottom_toTopOf="@id/tvScan"
-            app:layout_constraintEnd_toStartOf="@id/scScan"
-            app:layout_constraintHorizontal_weight="1"
-            app:layout_constraintStart_toEndOf="@id/codeDesc"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="@id/codeDesc"
+            app:layout_constraintTop_toTopOf="@id/codeDesc" />
+
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/scScan"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Start"
-            app:layout_constraintBottom_toBottomOf="@id/btnFull"
+            android:text="Scanning is currently disabled"
+            app:layout_constraintBottom_toTopOf="@id/tvScan"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_weight="1"
-            app:layout_constraintStart_toEndOf="@id/btnFull"
-            app:layout_constraintTop_toTopOf="@id/btnFull" />
+            app:layout_constraintStart_toEndOf="@id/codeDesc"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <View
             android:id="@+id/vScan"
@@ -238,8 +238,8 @@
             android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@id/scScan"
-            app:layout_constraintStart_toStartOf="@id/btnFull"
-            app:layout_constraintTop_toBottomOf="@id/btnFull" />
+            app:layout_constraintStart_toStartOf="@id/scScan"
+            app:layout_constraintTop_toBottomOf="@id/scScan" />
 
         <ListView
             android:id="@+id/ScanningScreenListView"

@@ -3,10 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/help"
-        android:title=""
-        app:showAsAction="always"
         android:icon="@drawable/ic_baseline_help_24"
-        />
+        android:title=""
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/setting"
+        android:icon="@mipmap/ic_setting"
+        android:title=""
+        app:showAsAction="always" />
     <item
         android:id="@+id/check_duplicated"
         android:checkable="true"

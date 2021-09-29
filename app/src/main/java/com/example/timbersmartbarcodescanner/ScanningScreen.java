@@ -104,8 +104,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     private boolean isScanRunning;
 
     private SwitchCompat scScan;
-    private Button btnFull;
     private View vScan;
+    private Button btnScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -256,6 +256,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
                 startActivity(intent);
                 break;
+            case R.id.setting:
+                startActivity(new Intent(this, SettingActivity.class));
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -272,10 +275,19 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         mListView = findViewById(R.id.ScanningScreenListView);
         search = findViewById(R.id.buttonSearch);
         mVideoSurface = findViewById(R.id.tvScan);
-        btnFull = findViewById(R.id.btnFull);
         scScan = findViewById(R.id.scScan);
         vScan = findViewById(R.id.vScan);
-        btnFull.setOnClickListener(v -> {
+        btnScan = findViewById(R.id.btnScan);
+        mVideoSurface.setOnClickListener(v -> {
+            if (ScanningScreen.this.camera != null) {
+                camera.close();
+                camera = null;
+            }
+            startActivityForResult(
+                    new Intent(this, BarcodeScannerActivity.class),
+                    0);
+        });
+        btnScan.setOnClickListener(v -> {
             if (ScanningScreen.this.camera != null) {
                 camera.close();
                 camera = null;
@@ -288,8 +300,10 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             isScanRunning = !isScanRunning;
             scScan.setChecked(isScanRunning);
             if (isScanRunning && ScanningScreen.this.camera == null) {
+                scScan.setText("Scanning is currently enabled");
                 setupCamera();
             } else if (ScanningScreen.this.camera != null) {
+                scScan.setText("Scanning is currently disabled");
                 camera.close();
                 camera = null;
             }
@@ -757,6 +771,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     public void onResume() {
         Log.e(TAG, "onResume");
         super.onResume();
+        intervalTime = getSharedPreferences("Scan interval", Context.MODE_PRIVATE).getLong("Scan interval time", 2000);
         // try to re-initialise the previewer and check if the product(drone) is attached and ready to use
 
         if (mVideoSurface == null) {
@@ -826,16 +841,27 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         return false;
     }
 
+    private long preScanTime = 0;
+    private long intervalTime;
+
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
         if (isRunning) return;
-
         isRunning = true;
-
-        Bitmap bitmap = mVideoSurface.getBitmap();
-        scanner.process(InputImage.fromBitmap(bitmap, 0))
-                .addOnSuccessListener(barcodes -> onBarcodeRead(barcodes, bitmap))
-                .addOnFailureListener(e -> isRunning = false);
+        Log.i(TAG, "onSurfaceTextureUpdated: first scan ready");
+        if ((System.currentTimeMillis() - preScanTime) > intervalTime) {
+            Bitmap bitmap = mVideoSurface.getBitmap();
+            scanner.process(InputImage.fromBitmap(bitmap, 0))
+                    .addOnSuccessListener(barcodes -> {
+                        Log.i(TAG, "onSurfaceTextureUpdated: first scan ");
+                        preScanTime = System.currentTimeMillis();
+                        onBarcodeRead(barcodes, bitmap);
+                    })
+                    .addOnFailureListener(e -> isRunning = false);
+        } else {
+            Log.i(TAG, "onSurfaceTextureUpdated: repetition");
+            Toast.makeText(this, "Do not scan code repeatedly within " + intervalTime / 1000 + " seconds", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

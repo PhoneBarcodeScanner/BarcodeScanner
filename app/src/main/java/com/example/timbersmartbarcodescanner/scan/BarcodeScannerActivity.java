@@ -19,6 +19,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -74,7 +75,7 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
         icBack = findViewById(R.id.back);
         icBack.setOnClickListener(v -> finish());
         textureView.setSurfaceTextureListener(this);
-
+        textureView.setOnClickListener(v -> finish());
         bitmapDirectory = new ContextWrapper(getApplicationContext()).getDir("bitmap_", Context.MODE_PRIVATE);
 
     }
@@ -103,16 +104,31 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
         return false;
     }
 
+    private long preScanTime = 0;
+    private long intervalTime;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        intervalTime = getSharedPreferences("Scan interval", Context.MODE_PRIVATE).getLong("Scan interval time", 2000);
+    }
+
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
-        if (isRunning) return;
-
-        isRunning = true;
-
-        Bitmap bitmap = textureView.getBitmap();
-        scanner.process(InputImage.fromBitmap(bitmap, 0))
-                .addOnSuccessListener(barcodes -> onBarcodeRead(barcodes, bitmap))
-                .addOnFailureListener(e -> isRunning = false);
+        Log.i(TAG, "onSurfaceTextureUpdated: first scan ready");
+        if ((System.currentTimeMillis() - preScanTime) > intervalTime) {
+            Bitmap bitmap = textureView.getBitmap();
+            scanner.process(InputImage.fromBitmap(bitmap, 0))
+                    .addOnSuccessListener(barcodes -> {
+                        Log.i(TAG, "onSurfaceTextureUpdated: first scan ");
+                        preScanTime = System.currentTimeMillis();
+                        onBarcodeRead(barcodes, bitmap);
+                    })
+                    .addOnFailureListener(e -> isRunning = false);
+        } else {
+            Log.i(TAG, "onSurfaceTextureUpdated: repetition");
+            Toast.makeText(this, "Do not scan code repeatedly within " + intervalTime / 1000 + " seconds", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

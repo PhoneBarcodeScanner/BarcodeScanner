@@ -6,6 +6,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
+
 @Database(entities = {Stocktake.class, Area.class, Barcode.class}, version = 1)
 public abstract class BarcodeScannerDB extends RoomDatabase{
 
@@ -23,7 +24,7 @@ public abstract class BarcodeScannerDB extends RoomDatabase{
         return instance;
     }
 
-     static void closeDatabase() {
+    static void closeDatabase() {
         if (instance != null) {
             instance.close();
             instance = null;
