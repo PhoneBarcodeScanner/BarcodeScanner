@@ -2,13 +2,18 @@ package com.example.timbersmartbarcodescanner;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
+import android.renderscript.ScriptGroup;
+import android.text.InputType;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -41,15 +46,15 @@ import java.util.Comparator;
 import java.util.Date;
 
 /*
-*   159.333 - Programming Project Semester 2, 2021
-*   TimberSmart Phone Barcode scanner
-*
-*   Student Name / Student ID:
-*       Runyu Luo (17217478)
-*       Caitlin Winterburn (19028948)
-*       Mohammed Shareef (19032353)
-*       Seungwoon Yang (21008279)
-*/
+ *   159.333 - Programming Project Semester 2, 2021
+ *   TimberSmart Phone Barcode scanner
+ *
+ *   Student Name / Student ID:
+ *       Runyu Luo (17217478)
+ *       Caitlin Winterburn (19028948)
+ *       Mohammed Shareef (19032353)
+ *       Seungwoon Yang (21008279)
+ */
 
 public class ActivityMain extends AppCompatActivity implements Serializable {
 
@@ -70,6 +75,8 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     private ImageView iv;
     private Toolbar toolbar_stock_screen;
     private LinearLayout mHintLayoutTab;
+    private int ClientID = -1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +89,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
         if ((checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
                 (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
-                    (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED))
+                (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED))
             requestPermissions(
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,  Manifest.permission.CAMERA}, 1);
         else {
@@ -118,15 +125,10 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.menu,menu);
-        mi = menu.findItem(R.id.check_duplicated);
+        //mi = menu.findItem(R.id.check_duplicated);
         help = menu.findItem(R.id.help);
 
-        Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Stock take",false);
-        if(checkSelect){
-            mi.setChecked(true);
-        }else {
-            mi.setChecked(false);
-        }
+
 
         return true;
     }
@@ -135,7 +137,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId())
         {
-            case R.id.check_duplicated:
+            /*case R.id.check_duplicated:
                 SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 if(item.isChecked())
@@ -150,6 +152,8 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 }
                 editor.apply();
                 break;
+                */
+
             case R.id.help:
                 new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_baseline_info_24)
@@ -160,10 +164,40 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                         .show();
                 break;
 
-                //bluetooth connectivity ------  ? (keep or remove)
-            case R.id.bluetooth_connect:
-                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                startActivity(intent);
+
+            case R.id.client_ID_set:
+                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor2 = sp2.edit();
+                AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
+                int current = sp2.getInt("ClientID", ClientID);
+                if(current < 0){
+                    cBuilder.setTitle("Current Client ID: Not yet set");
+                } else {
+                    cBuilder.setTitle("Current Client ID: " + current);
+                }
+
+                final EditText input = new EditText(this);
+                input.setHint("Enter new client ID...");
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                cBuilder.setView(input);
+
+                cBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ClientID = Integer.parseInt(input.getText().toString());
+                        editor2.putInt("ClientID", ClientID);
+                        editor2.commit();
+                    }
+                });
+
+                cBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                cBuilder.show();
+
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -216,7 +250,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         mAddNewStocktake = findViewById(R.id.ActivityMainAddNewStocktake);
         mNewStocktakeName = findViewById(R.id.ActivityMainEditStocktake);
         mHintLayoutTab = findViewById(R.id.emptyTab);
-       // iv = findViewById(R.id.Stockimage);
+        // iv = findViewById(R.id.Stockimage);
         toolbar_stock_screen=(Toolbar)findViewById(R.id.StockScreenToolBar);
         setSupportActionBar(toolbar_stock_screen);
         title.setTag(new Boolean(false));
@@ -259,11 +293,11 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
             mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
             mListView.setAdapter(mStocktakeListAdapter);
             mListView.setOnItemClickListener((adapterView, view, i, l)->{
-                    try {
-                        StockTakeViewButtonClick(view.findViewById(R.id.ActivityMainButtonView));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    StockTakeViewButtonClick(view.findViewById(R.id.ActivityMainButtonView));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
         } catch (Exception e) {
             e.printStackTrace();
@@ -273,11 +307,6 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
         //----------------------------------------------------------------------------
         //on click listener for returning to home
-
-
-
-
-
 
         // Add addNew stocktake button onclick listener----------------
         //    StockTakeListAdapter finalStockTakeListAdapter = stockTakeListAdapter;
@@ -301,33 +330,33 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                     }
                 }
                 else {
-                        boolean unique = true;
-                        for (int i = 0; i < stocktakeDAO.getAllStocktakes().size(); i++) {
-                            if (newStocktakeName.equals("")) {
-                                unique = false;
-                                break;
-                            }
-                            if (stocktakeDAO.getAllStocktakes().get(i).getStocktakeName().equals(newStocktakeName)) {
-                                unique = false;
-                                break;
-                            }
+                    boolean unique = true;
+                    for (int i = 0; i < stocktakeDAO.getAllStocktakes().size(); i++) {
+                        if (newStocktakeName.equals("")) {
+                            unique = false;
+                            break;
                         }
-                        if (unique || mi.isChecked() && !"".equals(newStocktakeName)) {
-                            stocktakeDAO.insertStocktake(new Stocktake(newStocktakeName, dateFormat.format(date),
-                                    dateFormat.format(date), 0));
-                            mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
-                            mListView.setAdapter(mStocktakeListAdapter);
-                            mListView.invalidateViews();
-                            mNewStocktakeName.setText("");
-                            update();
-                            title.setTag(new Boolean(false));
-                            iv.setImageBitmap(null);
-                            Toast.makeText(this,"Stock Added",Toast.LENGTH_SHORT).show();
-                        } else if (newStocktakeName.equals("")) {
-                            Toast.makeText(this, "Field is empty. Please enter a name for the Stocktake", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(this, "Name already in use. Please choose another", Toast.LENGTH_SHORT).show();
+                        if (stocktakeDAO.getAllStocktakes().get(i).getStocktakeName().equals(newStocktakeName)) {
+                            unique = false;
+                            break;
                         }
+                    }
+                    if (unique || mi.isChecked() && !"".equals(newStocktakeName)) {
+                        stocktakeDAO.insertStocktake(new Stocktake(newStocktakeName, dateFormat.format(date),
+                                dateFormat.format(date), 0));
+                        mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
+                        mListView.setAdapter(mStocktakeListAdapter);
+                        mListView.invalidateViews();
+                        mNewStocktakeName.setText("");
+                        update();
+                        title.setTag(new Boolean(false));
+                        iv.setImageBitmap(null);
+                        Toast.makeText(this,"Stock Added",Toast.LENGTH_SHORT).show();
+                    } else if (newStocktakeName.equals("")) {
+                        Toast.makeText(this, "Field is empty. Please enter a name for the Stocktake", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Name already in use. Please choose another", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 checkIfThereAreAnyStocktakes();
             } catch (Exception e) {
@@ -406,6 +435,8 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                                 if (stocktakes.get(n).getStocktakeName().equals(item)){
                                     deleteAllChildren(stocktakes.get(n));
                                     stocktakeDAO.delete(stocktakes.get(n));
+                                    mStocktakeListAdapter = new StocktakeListAdapter(ActivityMain.this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
+                                    mListView.setAdapter(mStocktakeListAdapter);
                                     update();
                                     return;
                                 }
@@ -426,17 +457,19 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
     private void deleteAllChildren (Stocktake parentStocktake) { // delete all areas and barcodes of the stocktake
         ArrayList<Area> areasInStocktake = new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()));
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        File bitmapDirectory = cw.getDir("bitmap_", Context.MODE_PRIVATE);
+
         for (Area area : areasInStocktake) {
             ArrayList<Barcode> barcodesInStocktake = new ArrayList<>(barcodeDAO.getBarcodesForArea(area.getAreaID()));
             for (Barcode barcode : barcodesInStocktake) { // delete all barcodes in each area in the parent stocktake
+                Barcode.deleteAllBitmaps(barcode, bitmapDirectory);
                 barcodeDAO.delete(barcode);
             }
             areaDAO.delete(area);
         }
     }
-    //this function is to return the stocktake
 
-    //this function is to update the stocktake
     public void update(){
         StocktakeListAdapter temp = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
         mStocktakeListAdapter = temp;
@@ -472,18 +505,22 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         try {
             // Generating file name e.g. Stocktake_5.csv
             // Uses name to create file as well
-            String fileSaveName = "Stocktake_" + stocktake.getStocktakeName() + ".csv";
+            SharedPreferences sh = getSharedPreferences("Timber Smart", MODE_PRIVATE);
+            int id = sh.getInt("ClientID", ClientID);
+            String fileSaveName = id+"_"+ stocktake.getStocktakeName() + ".csv";
             FileOutputStream out = openFileOutput(fileSaveName, Context.MODE_PRIVATE);
             out.write(data.toString().getBytes());
             out.close();
-
             // Exporting, allows user to choose preferred method of sharing
             Context context = getApplicationContext();
             File fileLocation = new File(getFilesDir(), fileSaveName);
+
+
+
             Uri path = FileProvider.getUriForFile(context, "com.example.timbersmartbarcodescanner.fileProvider", fileLocation);
             Intent fileIntent = new Intent(Intent.ACTION_SEND);
             fileIntent.setType("text/csv");
-            fileIntent.putExtra(Intent.EXTRA_SUBJECT, fileSaveName);
+            fileIntent.putExtra(Intent.EXTRA_SUBJECT, "Phone_Scanner_Automated_CSV_"+id);
             fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             fileIntent.putExtra(Intent.EXTRA_STREAM, path);
             startActivity(Intent.createChooser(fileIntent, "Send Mail"));
@@ -502,6 +539,13 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
         }*/
+        BarcodeScannerDB.closeDatabase();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        BarcodeScannerDB.closeDatabase();
     }
 
     @Override
