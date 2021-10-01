@@ -7,7 +7,7 @@ import java.util.ArrayList;
 // This is a singleton class which will hold all the data for each stock take.
 // This was decided to avoid passing bundles across many activities.
 
-public class    Data implements Serializable {
+public class Data implements Serializable {
 
     private static final String FILENAME = "notused.txt";
     private static String FILE_NAME = "timbersmart.txt";
@@ -49,7 +49,7 @@ public class    Data implements Serializable {
     // Used to access Data Class values on different screens,
     // If function is called when no Data object is created,
     // Then a new blank Data object is created, otherwise previously created Data object is returned
-    public static Data getDataInstance() throws Exception {
+    public static Data getDataInstance() {
         if (mData == null){
             mData = new Data();
         }

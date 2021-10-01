@@ -24,8 +24,7 @@
             android:fontFamily="serif"
             android:gravity="center|top"
             android:textColor="@color/colorTimberSmartWhite"
-            android:textSize="40sp"
-            android:onClick="goHome"/>
+            android:textSize="40sp" />
     </androidx.appcompat.widget.Toolbar>
 
     <!--    Barcode/Enter/Counters    Layout_Weight: 10-->
@@ -225,6 +224,13 @@
                             android:textSize="20sp"
                             android:textStyle="bold" />
 
+                        <Button
+                            android:id="@+id/scanBtn"
+                            android:layout_centerInParent="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Scan"
+                            android:textSize="20sp"/>
 <!--                        <ImageView-->
 <!--                            android:id="@+id/Rowimage"-->
 <!--                            android:layout_width="wrap_content"-->
@@ -297,12 +303,12 @@
             </ListView>
         </LinearLayout>
 
-        <TextureView
-            android:id="@+id/video_previewer_surface"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_weight="10" />
+<!--        <TextureView-->
+<!--            android:id="@+id/video_previewer_surface"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center"-->
+<!--            android:layout_weight="10" />-->
     </LinearLayout>
     <!--    Finished Button Layout_Weight: 5-->
 </LinearLayout>
