@@ -27,6 +27,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Size;
@@ -70,6 +71,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+
 public class ScanningScreen extends AppCompatActivity implements TextureView.SurfaceTextureListener {
 
     private static final String TAG = "ScanningScreen";
@@ -96,6 +98,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     private int imageUniqueId, matchCount;
     private Bitmap videoCaptureBitmap;
     private File bitmapDirectory;
+    private int ClientID;
 
     /**
      * @param mReceivedVideoDataListener received video data listener.
@@ -207,7 +210,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
-        mi = menu.findItem(R.id.check_duplicated);
+       // mi = menu.findItem(R.id.check_duplicated);
         help = menu.findItem(R.id.help);
 
         Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Scanning", false);
@@ -223,7 +226,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.check_duplicated:
+            /*case R.id.check_duplicated:
                 SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 if (item.isChecked()) {
@@ -243,6 +246,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 }
                 editor.apply();
                 break;
+
+             */
+
             case R.id.help:
                 new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_baseline_info_24)
@@ -252,13 +258,45 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         .setPositiveButton("OK", null)
                         .show();
                 break;
-            case R.id.bluetooth_connect:
-                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                startActivity(intent);
+
+            case R.id.client_ID_set:
+                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor2 = sp2.edit();
+                AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
+                int current = sp2.getInt("ClientID", ClientID);
+                if(current < 0){
+                    cBuilder.setTitle("Current Client ID: Not yet set");
+                } else {
+                    cBuilder.setTitle("Current Client ID: " + current);
+                }
+
+                final EditText input = new EditText(this);
+                input.setHint("Enter new client ID...");
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                cBuilder.setView(input);
+
+                cBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ClientID = Integer.parseInt(input.getText().toString());
+                        editor2.putInt("ClientID", ClientID);
+                        editor2.commit();
+                    }
+                });
+
+                cBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                cBuilder.show();
+
                 break;
-            case R.id.setting:
-                startActivity(new Intent(this, SettingActivity.class));
-                break;
+
+
+
+
         }
         return super.onOptionsItemSelected(item);
     }

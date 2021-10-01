@@ -7,6 +7,7 @@ import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -28,8 +29,6 @@ public class Barcode {
     @ColumnInfo(name = "bcd_date_time")
     public String barcodeDateTime;
 
-    @ColumnInfo(name = "bcd_area_name")
-    public String barcodeAreaName;
 
     @ColumnInfo(name = "bcd_count")
     public int barcodeCount; // records how many duplicate barcodes exist
@@ -42,11 +41,24 @@ public class Barcode {
     public static int getImageIdCount() { return imageIdCount; }
     public static void setImageIdCount(int count) { imageIdCount = count; }
 
+    public static void deleteAllBitmaps(Barcode barcode, File bitmapDirectory) {
+        String[] bitmaps = barcode.getBitmapID().split(","); // first delete all bitmaps from internal storage
+        for (String bitmap : bitmaps) {
+            if (!bitmap.equals("0")) { // 0 value means no bitmap/barcode image
+                try {
+                    File f = new File(bitmapDirectory, bitmap + ".jpg");
+                    boolean delete = f.delete();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
     // getters for columns //
     long getBarcodeID() { return bcd_id; }
     String getBarcodeString() { return barcodeString; }
     String getBarcodeDateTime() { return barcodeDateTime; }
-    String getBarcodeAreaName() { return barcodeAreaName; }
+
     int getBarcodeCount() { return barcodeCount; }
     String getBitmapID() { return bitmapID; }
 

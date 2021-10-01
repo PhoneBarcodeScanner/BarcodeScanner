@@ -3,21 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/help"
+        android:title=""
+        app:showAsAction="always"
         android:icon="@drawable/ic_baseline_help_24"
-        android:title=""
-        app:showAsAction="always" />
+        />
     <item
-        android:id="@+id/setting"
-        android:icon="@mipmap/ic_setting"
-        android:title=""
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/check_duplicated"
-        android:checkable="true"
-        android:icon="@drawable/ic_baseline_content_copy_24"
-        android:title="Allow Duplication" />
-    <item
-        android:id="@+id/bluetooth_connect"
-        android:icon="@drawable/ic_baseline_bluetooth_24"
-        android:title="Bluetooth Connection" />
+        android:id="@+id/client_ID_set"
+        android:icon="@drawable/ic_baseline_edit_24"
+        android:title="Set Client ID" />
+
 </menu>

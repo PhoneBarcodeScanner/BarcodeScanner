@@ -1,6 +1,7 @@
 package com.example.timbersmartbarcodescanner;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.provider.Settings;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -53,6 +55,9 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     private StocktakeDAO stocktakeDAO;
     private Stocktake parentStocktake;
 
+    private int ClientID;
+
+
 
     public void goHome(View view){
         Intent intent = new Intent(this,ActivityMain.class);
@@ -81,15 +86,8 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.menu,menu);
-        mi = menu.findItem(R.id.check_duplicated);
+        //mi = menu.findItem(R.id.check_duplicated);
         help = menu.findItem(R.id.help);
-
-        Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Area",false);
-        if(checkSelect){
-            mi.setChecked(true);
-        }else {
-            mi.setChecked(false);
-        }
 
         return true;
     }
@@ -98,7 +96,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId())
         {
-            case R.id.check_duplicated:
+           /* case R.id.check_duplicated:
                 SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 if(item.isChecked())
@@ -113,6 +111,8 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                 }
                 editor.apply();
                 break;
+                */
+
             case R.id.help:
                 new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_baseline_info_24)
@@ -122,9 +122,42 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                         .setPositiveButton("OK",null)
                         .show();
                 break;
-            case R.id.bluetooth_connect:
-                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                startActivity(intent);
+
+
+
+            case R.id.client_ID_set:
+                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor2 = sp2.edit();
+                AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
+                int current = sp2.getInt("ClientID", ClientID);
+                if(current < 0){
+                    cBuilder.setTitle("Current Client ID: Not yet set");
+                } else {
+                    cBuilder.setTitle("Current Client ID: " + current);
+                }
+
+                final EditText input = new EditText(this);
+                input.setHint("Enter new client ID...");
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                cBuilder.setView(input);
+
+                cBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ClientID = Integer.parseInt(input.getText().toString());
+                        editor2.putInt("ClientID", ClientID);
+                        editor2.commit();
+                    }
+                });
+
+                cBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                cBuilder.show();
+
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -325,6 +358,13 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         } catch (Exception e) {
             e.printStackTrace();
         }   */
+        BarcodeScannerDB.closeDatabase();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        BarcodeScannerDB.closeDatabase();
     }
 
    /* public void writeFileOnInternalStorage() throws Exception {
@@ -374,7 +414,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                         try {
                             for (int n = 0; n <areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).size(); n++){
                                 if (areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n).getAreaName().equals(item)){
-                                   // delete area from area table and update relevant parent stocktake fields
+                                    // delete area from area table and update relevant parent stocktake fields
                                     deleteAllChildren(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n));
                                     areaDAO.delete(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(n));
                                     mAreaListAdapter = new AreaListAdapter(AreasScreen.this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
@@ -406,10 +446,16 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     private void deleteAllChildren(Area parentArea) {
         BarcodeDAO barcodeDAO = BarcodeScannerDB.getDatabaseInstance(this).barcodeDao();
         ArrayList<Barcode> barcodesInStocktake = new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID()));
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        File bitmapDirectory = cw.getDir("bitmap_", Context.MODE_PRIVATE);
+
         for (Barcode barcode : barcodesInStocktake) { // delete all barcodes in each area in the parent stocktake
+            Barcode.deleteAllBitmaps(barcode, bitmapDirectory); // static method to delete all bitmaps from storage
             barcodeDAO.delete(barcode);
         }
     }
+
+
 
     public void update(){
         mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
