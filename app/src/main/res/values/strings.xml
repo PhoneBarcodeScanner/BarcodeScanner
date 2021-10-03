@@ -47,7 +47,7 @@
     <string name="ScanningScreenBlankCounter">XXX</string>
     <string name="ScanningScreenPreCount">Pre-count</string>
     <string name="ScanningScreenPreCountDefault">0</string>
-    <string name="ScanningScreenBarcodeDefault">Scan Barcode Here...</string>
+    <string name="ScanningScreenBarcodeDefault">Manual Entry Here...</string>
     <string name="enter">Enter</string>
     <string name="enter_barcode_here">Enter Barcode Here</string>
     <string name="count">Count</string>

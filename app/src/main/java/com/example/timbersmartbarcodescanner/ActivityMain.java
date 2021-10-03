@@ -332,16 +332,16 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 else {
                     boolean unique = true;
                     for (int i = 0; i < stocktakeDAO.getAllStocktakes().size(); i++) {
-                        if (newStocktakeName.equals("")) {
+                        if (newStocktakeName.equals("")) { // if string is null
                             unique = false;
                             break;
                         }
                         if (stocktakeDAO.getAllStocktakes().get(i).getStocktakeName().equals(newStocktakeName)) {
-                            unique = false;
+                            unique = false; // becomes false if stocktake name already exists
                             break;
                         }
                     }
-                    if (unique || mi.isChecked() && !"".equals(newStocktakeName)) {
+                    if (unique /*|| mi.isChecked() && !"".equals(newStocktakeName)*/) { // don't need duplication and null string check twice
                         stocktakeDAO.insertStocktake(new Stocktake(newStocktakeName, dateFormat.format(date),
                                 dateFormat.format(date), 0));
                         mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
@@ -352,9 +352,9 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                         title.setTag(new Boolean(false));
                         iv.setImageBitmap(null);
                         Toast.makeText(this,"Stock Added",Toast.LENGTH_SHORT).show();
-                    } else if (newStocktakeName.equals("")) {
+                    } else if (newStocktakeName.equals("")) { // checks for null string
                         Toast.makeText(this, "Field is empty. Please enter a name for the Stocktake", Toast.LENGTH_SHORT).show();
-                    } else {
+                    } else { // last case - duplicate entry
                         Toast.makeText(this, "Name already in use. Please choose another", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -488,7 +488,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         final int position = listView.getPositionForView(parentRow);
 
         StringBuilder data = new StringBuilder();
-        data.append("Area, Barcode");
+        data.append("Area, Barcode, Count");
 
         // Get data from selected stocktake -- data is retrieved from database
         Stocktake stocktake = stocktakeDAO.getAllStocktakes().get(position);
@@ -498,7 +498,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
             ArrayList<Barcode> barcodeList = new ArrayList<>(barcodeDAO.getBarcodesForArea(area.getAreaID()));
             for(int j = 0; j < barcodeList.size(); j++) {
                 Barcode barcode = barcodeList.get(j);
-                data.append("\n" + area.getAreaName() + ',' + barcode.getBarcodeString());
+                data.append("\n" + area.getAreaName() + ',' + barcode.getBarcodeString() + ',' + barcode.getBarcodeCount());
             }
         }
 

@@ -213,14 +213,14 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                     boolean unique = true;
                     String areaName = mNewAreaName.getText().toString();
 
-                    if(!mNewAreaName.getText().toString().equals("")){
+                    if(!mNewAreaName.getText().toString().equals("")){ // null string check
                         for (int i = 0; i < areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).size(); i++) {
                             if (areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID()).get(i).getAreaName().equals(areaName)){
-                                unique = false;
+                                unique = false; // duplicate entry
                             }
                         }
 
-                        if (unique || mi.isChecked() && !"".equals(areaName)) {
+                        if (unique /*|| mi.isChecked() && !"".equals(areaName)*/) { // duplicate and null checks already done ^
                             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
                             Date date = new Date();
                             Area mArea = new Area(parentStocktake.getStocktakeID(), areaName, dateFormat.format(date),

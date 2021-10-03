@@ -775,6 +775,18 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                                 displayImageInAlertDialog(bitmapIdArray, finalIndex, finalLast, barcodeName);
                             }
                         })
+                        .setNeutralButton("delete", (dialogInterface, i) -> {
+                            new AlertDialog.Builder(ScanningScreen.this)
+                                    .setTitle("Delete Barcode?")
+                                    .setMessage("Are you sure you want to delete this barcode?")
+                                    .setPositiveButton("Yes", (dInterface, j) -> {
+                                        deleteBarcodeImage(String.valueOf(id), barcodeName);
+                                    })
+                                    .setNegativeButton("No", (d, k) -> { // display toast
+                                        Toast.makeText(ScanningScreen.this, "Barcode not deleted", Toast.LENGTH_LONG).show();
+                                    }).show();
+
+                        })
                         .setNegativeButton("close", null)//end the recursion
                         .show();
             } else {
@@ -782,12 +794,63 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         .setIcon(R.drawable.ic_baseline_photo_camera_24)
                         .setTitle("Barcode: " + barcodeName + " " + (index + 1) + "/" + bitmapIdArray.size())
                         .setView(alertImageView)
+                        .setNeutralButton("delete", (dialogInterface, i) -> {
+                            new AlertDialog.Builder(ScanningScreen.this)
+                                    .setTitle("Delete Barcode?")
+                                    .setMessage("Are you sure you want to delete this barcode?")
+                                    .setPositiveButton("Yes", (dInterface, j) -> {
+                                        deleteBarcodeImage(String.valueOf(id), barcodeName);
+                                    })
+                                    .setNegativeButton("No", (d, k) -> {
+                                        Toast.makeText(ScanningScreen.this, "Barcode not deleted", Toast.LENGTH_LONG).show();
+                                    }).show();
+
+                        })
                         .setNegativeButton("close", null)//last is true so no next button
                         .show();
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+    private void deleteBarcodeImage(String bitmapID, String barcodeString) { // delete specified barcode image
+        Barcode barcode = barcodeDAO.getBarcodeByString(barcodeString, parentArea.getAreaID());
+        String[] bitmapIDs = barcode.getBitmapID().split(",");
+        if (bitmapIDs.length == 1) { // only one bitmap...delete barcode from database...
+            barcodeDAO.delete(barcode);
+        }
+        else {  // multiple bitmapIDs for given barcode have to modify string
+            StringBuilder builder = new StringBuilder();
+            String updatedBitmapIDs;
+            for (String bitmap : bitmapIDs) { // add all bitmapIDs except selected one
+                if (!bitmap.equals(bitmapID)) {
+                    builder.append(bitmap).append(",");
+                }
+            }
+            updatedBitmapIDs = builder.toString();
+            barcodeDAO.updateBitmapID(updatedBitmapIDs, barcode.getBarcodeID());
+            int tempCount = barcode.getBarcodeCount() - 1;
+            barcodeDAO.updateBarcodeCount(tempCount, barcode.getBarcodeID());
+        }
+
+        int temp5 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), // update stocktake modified date
+                new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date()));
+        int tempBarcodeCount = parentArea.getNumOfBarcodes() - 1; // decrement total barcode count
+        temp5 = areaDAO.updateNumOfBarcodes(parentArea.getAreaID(), tempBarcodeCount); // update database entry
+        mCountGlobal--;
+        calculateDifference();
+
+        mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
+        mListView.setAdapter(mBarcodeListAdapter);
+        update();   //update listview
+
+        try {
+            File f = new File(bitmapDirectory, bitmapID + ".jpg");
+            boolean delete = f.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Toast.makeText(ScanningScreen.this, "Barcode " + barcode.getBarcodeString()+ " deleted", Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -819,13 +882,14 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
     @Override
     protected void onStop() {
+        BarcodeScannerDB.closeDatabase();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        BarcodeScannerDB.closeDatabase();
+       // BarcodeScannerDB.closeDatabase();
     }
 
     public void playSound() {
