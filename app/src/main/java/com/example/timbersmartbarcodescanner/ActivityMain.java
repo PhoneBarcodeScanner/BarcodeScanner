@@ -235,7 +235,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         }*/
         BarcodeScannerDB.closeDatabase();
     }
-
+///////
     private void init() throws Exception {
       /*  try {
             readFromFile();

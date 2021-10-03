@@ -214,11 +214,11 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         help = menu.findItem(R.id.help);
 
         Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Scanning", false);
-        if (checkSelect) {
+    /*    if (checkSelect) {
             mi.setChecked(true);
         } else {
             mi.setChecked(false);
-        }
+        } */
         return true;
     }
 
@@ -570,7 +570,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         }
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         Date date = new Date();
-        if (unique || mi.isChecked()) {//if the barcode is unique
+        if (unique || duplicationEnabled) {//if the barcode is unique
             mCountGlobal++;
             int x = 0;
             for (Barcode b : barcodeDAO.getBarcodesForArea(parentArea.getAreaID())) {
@@ -874,8 +874,10 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
     @Override
     public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
-        camera.close();
-        camera = null;
+        if (camera != null) {
+            camera.close();
+            camera = null;
+        }
         return false;
     }
 
