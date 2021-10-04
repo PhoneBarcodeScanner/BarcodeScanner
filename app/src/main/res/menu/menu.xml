@@ -12,4 +12,9 @@
         android:icon="@drawable/ic_baseline_edit_24"
         android:title="Set Client ID" />
 
+    <item
+        android:id="@+id/barcode_prefix_filter"
+        android:icon="@drawable/ic_outline_filter_alt_24"
+        android:title="Set Barcode Prefix" />
+
 </menu>

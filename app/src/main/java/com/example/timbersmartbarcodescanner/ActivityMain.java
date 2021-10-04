@@ -76,6 +76,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     private Toolbar toolbar_stock_screen;
     private LinearLayout mHintLayoutTab;
     private int ClientID = -1;
+    private String barcodePrefix = null;
 
 
     @Override
@@ -171,7 +172,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
                 int current = sp2.getInt("ClientID", ClientID);
                 if(current < 0){
-                    cBuilder.setTitle("Current Client ID: Not yet set");
+                    cBuilder.setTitle("No Client ID Set");
                 } else {
                     cBuilder.setTitle("Current Client ID: " + current);
                 }
@@ -197,6 +198,41 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                     }
                 });
                 cBuilder.show();
+
+                break;
+
+            case R.id.barcode_prefix_filter:
+                SharedPreferences sp3 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor3 = sp3.edit();
+
+                AlertDialog.Builder cBuilder2 = new AlertDialog.Builder(this);
+                barcodePrefix = sp3.getString("BarcodePrefix", barcodePrefix);
+                if(barcodePrefix == null){
+                    cBuilder2.setTitle("No Prefix Set");
+                } else {
+                    cBuilder2.setTitle("Current Barcode Prefix: " + barcodePrefix);
+                }
+                final EditText input2 = new EditText(this);
+                input2.setHint("Enter Barcode Prefix Filter...");
+                input2.setInputType(InputType.TYPE_CLASS_TEXT);
+                cBuilder2.setView(input2);
+
+                cBuilder2.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        barcodePrefix = input2.getText().toString();
+                        editor3.putString("BarcodePrefix", barcodePrefix);
+                        editor3.commit();
+                    }
+                });
+
+                cBuilder2.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                cBuilder2.show();
 
                 break;
         }
