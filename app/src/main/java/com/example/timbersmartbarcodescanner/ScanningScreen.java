@@ -309,7 +309,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         mBarcode = findViewById(R.id.editTextBarcode);
         mPreCount = findViewById(R.id.editTextPreCount);
         mEnter = findViewById(R.id.buttonEnter);
-        mConfirmPreCount = findViewById(R.id.buttonConfirmPreCount);
+       // mConfirmPreCount = findViewById(R.id.buttonConfirmPreCount);
         mListView = findViewById(R.id.ScanningScreenListView);
         search = findViewById(R.id.buttonSearch);
         mVideoSurface = findViewById(R.id.tvScan);
@@ -416,6 +416,16 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         calculateDifference();
 
         mPreCount.setText(String.valueOf(mPreCountGlobal));
+        mPreCount.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override // this is used alongside the textwatcher to ensure a value is displayed in the field
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) { // if preCount edittext does not have focus
+                    if (mPreCount.getText().toString().equals("")) {
+                        mPreCount.setText("0"); // set default value of 0 if no value was entered before loss of focus
+                    }
+                }
+            }
+        });
 
         mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
         mListView.setAdapter(mBarcodeListAdapter);
@@ -434,7 +444,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             mBarcode.setText(temp);
         });
 
-        mConfirmPreCount.setOnClickListener((View v) -> {
+     /*   mConfirmPreCount.setOnClickListener((View v) -> {
             String tempString = mPreCount.getText().toString();
             int tempPreCount;
 
@@ -454,7 +464,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             calculateDifference();
             mBarcode.requestFocus();
 
-        });
+        }); */
         initTextWatchers();
     }
 
@@ -527,6 +537,42 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             }
         };
         mBarcode.addTextChangedListener(barcodeTextWatcher);
+        // preCount watcher
+        TextWatcher preCountWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // not used
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // not used
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { // save new preCount, update stats
+                String tempString = mPreCount.getText().toString();
+                int tempPreCount;
+
+                if (tempString.equals("")) {
+                    tempPreCount = 0; // textwatcher takes care of updating preCount values on default case as well
+
+                } else {
+                    tempPreCount = Integer.parseInt(tempString);
+                }
+
+                mPreCountGlobal = tempPreCount;
+                try {
+
+                    int temp = areaDAO.updatePreCount(parentArea.getAreaID(), tempPreCount);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                calculateDifference();
+
+            }
+        };
+        mPreCount.addTextChangedListener(preCountWatcher);
 
     }
 
