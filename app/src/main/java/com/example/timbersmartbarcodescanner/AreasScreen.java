@@ -392,7 +392,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         }
     }
 
-    //placeholder for no areas
+    //placeholder for no areas//
     private void checkIfThereAreAnyAreas() {
         try {
             if (mAreaListAdapter.getCount() == 0) {

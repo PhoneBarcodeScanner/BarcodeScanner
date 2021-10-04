@@ -51,6 +51,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 
 import com.example.timbersmartbarcodescanner.scan.BarcodeScannerActivity;
@@ -100,6 +101,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     private File bitmapDirectory;
     private int ClientID = -1;
     private String barcodePrefix = null;
+    private ConstraintLayout mPlaceholder;
 
     /**
      * @param mReceivedVideoDataListener received video data listener.
@@ -118,6 +120,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 //        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         toolbar_scanning_screen = (Toolbar) findViewById(R.id.ScanningScreenToolBar);
         setSupportActionBar(toolbar_scanning_screen);
+        mPlaceholder = findViewById(R.id.placeholder);
         barcodeDAO = BarcodeScannerDB.getDatabaseInstance(this).barcodeDao();
         areaDAO = BarcodeScannerDB.getDatabaseInstance(this).areaDao();
         stocktakeDAO = BarcodeScannerDB.getDatabaseInstance(this).stocktakeDao();
@@ -155,9 +158,27 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             e.printStackTrace();
         }
 
+        checkForEmptyBarcodeList();
+
         // 바코드 읽기 요청
     }
 
+    private void checkForEmptyBarcodeList () {
+        try {
+            if (mBarcodeListAdapter.getCount() == 0) {
+                if (mPlaceholder.getVisibility() == View.GONE){
+                    mPlaceholder.setVisibility(View.VISIBLE); // make placeholder visible
+                    findViewById(R.id.codeDesc).setVisibility(View.INVISIBLE); // make barcode title invisible
+                }
+            } else { // barcodes exist, make placeholder invisible
+                mPlaceholder.setVisibility(View.GONE);
+                findViewById(R.id.codeDesc).setVisibility(View.VISIBLE); // make barcode title visible
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         // 바코드 읽기 결과 처리
@@ -188,6 +209,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     public void update() {
         mBarcodeListAdapter.notifyDataSetChanged();
         mListView.invalidateViews();
+        checkForEmptyBarcodeList();
     }
 
 
