@@ -32,6 +32,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 
+import com.google.android.gms.common.api.Api;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -87,6 +89,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         areaDAO = barcodeScannerDB.areaDao();
         barcodeDAO = barcodeScannerDB.barcodeDao();
         stocktakeDAO = barcodeScannerDB.stocktakeDao();
+
 
         if ((checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
                 (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ||
@@ -171,6 +174,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 SharedPreferences.Editor editor2 = sp2.edit();
                 AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
                 int current = sp2.getInt("ClientID", ClientID);
+
                 if(current < 0){
                     cBuilder.setTitle("No Client ID Set");
                 } else {
@@ -204,35 +208,36 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
             case R.id.barcode_prefix_filter:
                 SharedPreferences sp3 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor3 = sp3.edit();
+                AlertDialog.Builder bBuilder = new AlertDialog.Builder(this);
+                String current2 = sp3.getString("BarcodePrefix", barcodePrefix);
 
-                AlertDialog.Builder cBuilder2 = new AlertDialog.Builder(this);
-                barcodePrefix = sp3.getString("BarcodePrefix", barcodePrefix);
-                if(barcodePrefix == null){
-                    cBuilder2.setTitle("No Prefix Set");
+                if(current2 == null){
+                    bBuilder.setTitle("No Barcode Prefix Set");
                 } else {
-                    cBuilder2.setTitle("Current Barcode Prefix: " + barcodePrefix);
+                    bBuilder.setTitle("Current Barcode Prefix: " + current2);
                 }
-                final EditText input2 = new EditText(this);
-                input2.setHint("Enter Barcode Prefix Filter...");
-                input2.setInputType(InputType.TYPE_CLASS_TEXT);
-                cBuilder2.setView(input2);
 
-                cBuilder2.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                final EditText input2 = new EditText(this);
+                input2.setHint("Enter New Barcode Prefix Filter...");
+                input2.setInputType(InputType.TYPE_CLASS_TEXT);
+                bBuilder.setView(input2);
+
+                bBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         barcodePrefix = input2.getText().toString();
                         editor3.putString("BarcodePrefix", barcodePrefix);
-                        editor3.commit();
+                        editor3.apply();
                     }
                 });
 
-                cBuilder2.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                bBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
                     }
                 });
-                cBuilder2.show();
+                bBuilder.show();
 
                 break;
         }

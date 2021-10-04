@@ -98,7 +98,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     private int imageUniqueId, matchCount;
     private Bitmap videoCaptureBitmap;
     private File bitmapDirectory;
-    private int ClientID;
+    private int ClientID = -1;
+    private String barcodePrefix = null;
 
     /**
      * @param mReceivedVideoDataListener received video data listener.
@@ -264,8 +265,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 SharedPreferences.Editor editor2 = sp2.edit();
                 AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
                 int current = sp2.getInt("ClientID", ClientID);
+
                 if(current < 0){
-                    cBuilder.setTitle("Current Client ID: Not yet set");
+                    cBuilder.setTitle("No Client ID Set");
                 } else {
                     cBuilder.setTitle("Current Client ID: " + current);
                 }
@@ -294,8 +296,42 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
                 break;
 
+            case R.id.barcode_prefix_filter:
+                SharedPreferences sp3 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor3 = sp3.edit();
+                AlertDialog.Builder bBuilder = new AlertDialog.Builder(this);
+                String current2 = sp3.getString("BarcodePrefix", barcodePrefix);
 
+                if(current2 == null){
+                    bBuilder.setTitle("No Barcode Prefix Set");
+                } else {
+                    bBuilder.setTitle("Current Barcode Prefix: " + current2);
+                }
 
+                final EditText input2 = new EditText(this);
+                input2.setHint("Enter New Barcode Prefix Filter...");
+                input2.setInputType(InputType.TYPE_CLASS_TEXT);
+                bBuilder.setView(input2);
+
+                bBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        barcodePrefix = input2.getText().toString();
+                        editor3.putString("BarcodePrefix", barcodePrefix);
+                        editor3.apply();
+
+                    }
+                });
+
+                bBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                bBuilder.show();
+
+                break;
 
         }
         return super.onOptionsItemSelected(item);
