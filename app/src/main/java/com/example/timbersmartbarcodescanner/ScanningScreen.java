@@ -280,9 +280,18 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 cBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        ClientID = Integer.parseInt(input.getText().toString());
-                        editor2.putInt("ClientID", ClientID);
-                        editor2.commit();
+                        if(input.getText().length() == 0){
+                            dialog.cancel();
+                            Context context = getApplicationContext();
+                            CharSequence text = "Field Empty: Client ID Not Changed";
+                            int duration = Toast.LENGTH_SHORT;
+                            Toast toast = Toast.makeText(context, text, duration);
+                            toast.show();
+                        } else {
+                            ClientID = Integer.parseInt(input.getText().toString());
+                            editor2.putInt("ClientID", ClientID);
+                            editor2.commit();
+                        }
                     }
                 });
 
@@ -316,9 +325,18 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 bBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        barcodePrefix = input2.getText().toString();
-                        editor3.putString("BarcodePrefix", barcodePrefix);
-                        editor3.apply();
+                        if(input2.getText().length() == 0){
+                            dialog.cancel();
+                            Context context = getApplicationContext();
+                            CharSequence text = "Field Empty: Barcode Prefix Filter Not Changed";
+                            int duration = Toast.LENGTH_SHORT;
+                            Toast toast = Toast.makeText(context, text, duration);
+                            toast.show();
+                        }else {
+                            barcodePrefix = input2.getText().toString();
+                            editor3.putString("BarcodePrefix", barcodePrefix);
+                            editor3.apply();
+                        }
 
                     }
                 });
