@@ -200,6 +200,8 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                             ClientID = Integer.parseInt(input.getText().toString());
                             editor2.putInt("ClientID", ClientID);
                             editor2.apply();
+                            Toast.makeText(ActivityMain.this, "Client ID changed",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

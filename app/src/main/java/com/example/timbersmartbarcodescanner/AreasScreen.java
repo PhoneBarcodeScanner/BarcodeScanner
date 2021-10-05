@@ -156,7 +156,9 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                         } else {
                             ClientID = Integer.parseInt(input.getText().toString());
                             editor2.putInt("ClientID", ClientID);
-                            editor2.commit();
+                            editor2.apply();
+                            Toast.makeText(AreasScreen.this, "Client ID changed",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

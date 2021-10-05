@@ -312,7 +312,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         } else {
                             ClientID = Integer.parseInt(input.getText().toString());
                             editor2.putInt("ClientID", ClientID);
-                            editor2.commit();
+                            editor2.apply();
+                            Toast.makeText(ScanningScreen.this, "Client ID changed",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
