@@ -358,6 +358,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                             barcodePrefix = input2.getText().toString();
                             editor3.putString("BarcodePrefix", barcodePrefix);
                             editor3.apply();
+                            Toast.makeText(ScanningScreen.this, "Prefix setting changed",
+                                    Toast.LENGTH_SHORT).show();
                         }
 
                     }
@@ -367,6 +369,18 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
+                    }
+                });
+
+                bBuilder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        barcodePrefix = null; // make barcode prefix equal null
+                        editor3.remove("BarcodePrefix"); // remove setting from app
+                        editor3.apply();
+                        Toast.makeText(ScanningScreen.this, "Prefix setting removed",
+                                Toast.LENGTH_SHORT).show();
+
                     }
                 });
                 bBuilder.show();
@@ -542,6 +556,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
         }); */
         initTextWatchers();
+        SharedPreferences barcodeFilter = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
+        barcodePrefix = barcodeFilter.getString("BarcodePrefix", barcodePrefix);
     }
 
     /**
@@ -570,7 +586,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
             @Override
             public void afterTextChanged(Editable barcodeEditable) {
-                boolean unique = true;
+               // boolean unique = true;
+                boolean scanned = true;
                 String temp = barcodeEditable.toString();
                 if (temp.contains("\n")) {
 
@@ -590,11 +607,11 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         // Send Barcode string to addBarcodeLogic function
                         // This function handles creation of barcode object
                         try {
-                            unique = saveBarcode(temp, 0); //have a test if 0 then No image is stored
+                            scanned = saveBarcode(temp, 0); //have a test if 0 then No image is stored
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        if (unique || duplicationEnabled) {
+                        if (scanned/*unique || duplicationEnabled*/) { // only care about whether barcode was scanned or not
                             CharSequence text = "Barcode " + temp + " scanned";
                             Log.d(TAG, text.toString());
                             Context context = getApplicationContext();
@@ -605,7 +622,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
                         mBarcodeListAdapter.notifyDataSetChanged();
 
-                        calculateDifference();
+                    //    calculateDifference();
 
                         mBarcode.setText("");
                     }
@@ -680,8 +697,22 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     // Firstly checks if scanned barcode is already in system
     // If not it then constructs new barcode object and adds it to the arrayList
     public boolean saveBarcode(String barcode, int bitmapId) throws Exception {
-        playSound();
+       // playSound();
+        if (barcodePrefix != null) { // if barcode prefix is set, filter barcodes to scan
+            int prefixLength = barcodePrefix.length(); // get prefix length
+            if (barcode.length() >= prefixLength) { // barcode must be at least as long as the prefix
+                String scannedBarcodePrefix = barcode.substring(0, prefixLength);
+                if (!scannedBarcodePrefix.equals(barcodePrefix)) { // scanned barcode doesn't match prefix filter
+                    Toast.makeText(this, "Barcode ignored. Doesn't match prefix settings", Toast.LENGTH_SHORT).show();
+                    return false; // barcode ignored, not added to database
+                }
+            } else { // barcode is too short. ignore it
+                Toast.makeText(this, "Barcode ignored. Doesn't match prefix settings", Toast.LENGTH_SHORT).show();
+                return false; // barcode ignored, not added to database
+            }
+        }
 
+        playSound();
         //Check to see if the barcode doesn't exist before adding.
         boolean unique = true;
         for (int i = 0; i < barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).size(); i++) {
@@ -694,6 +725,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         Date date = new Date();
         if (unique || duplicationEnabled) {//if the barcode is unique
             mCountGlobal++;
+            calculateDifference();
             int x = 0;
             for (Barcode b : barcodeDAO.getBarcodesForArea(parentArea.getAreaID())) {
                 if (b.getBarcodeString().equals(barcode)) {
@@ -730,7 +762,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         }
 
         update();
-        return unique;
+        return true; //unique; - function now returns true if barcode was scanned
+                    // and false if it was not. Duplication is enabled by default
     }
 
 

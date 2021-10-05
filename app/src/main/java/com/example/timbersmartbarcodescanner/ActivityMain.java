@@ -199,7 +199,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                         } else {
                             ClientID = Integer.parseInt(input.getText().toString());
                             editor2.putInt("ClientID", ClientID);
-                            editor2.commit();
+                            editor2.apply();
                         }
                     }
                 });
@@ -245,6 +245,9 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                             barcodePrefix = input2.getText().toString();
                             editor3.putString("BarcodePrefix", barcodePrefix);
                             editor3.apply();
+                            Toast.makeText(ActivityMain.this, "Prefix setting changed",
+                                    Toast.LENGTH_SHORT).show();
+
                         }
 
                     }
@@ -254,6 +257,16 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
+                    }
+                });
+                bBuilder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        barcodePrefix = null; // make barcode prefix equal null
+                        editor3.remove("BarcodePrefix"); // remove setting from app
+                        editor3.apply();
+                        Toast.makeText(ActivityMain.this, "Prefix setting removed",
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
                 bBuilder.show();
