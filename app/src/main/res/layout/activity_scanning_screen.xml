@@ -190,7 +190,7 @@
             android:layout_height="wrap_content"
             android:gravity="center|start"
             android:padding="15dp"
-            android:text="@string/noBarcode"
+            android:text="@string/barcode"
             android:textColor="#000"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -203,7 +203,7 @@
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/scScan"
-            android:background="@color/background_switch"
+            android:background="@color/placeholderGrey"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="15dp"

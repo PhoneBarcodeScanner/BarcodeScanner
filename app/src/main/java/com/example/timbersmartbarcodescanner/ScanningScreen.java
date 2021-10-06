@@ -374,9 +374,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 bBuilder.show();
                 break;
 
-            case R.id.setting:
+           /* case R.id.setting:        // add menu item in menu.xml and link it //
                 startActivity(new Intent(this, SettingActivity.class));
-                break;
+                break; */
 
         }
         return super.onOptionsItemSelected(item);
