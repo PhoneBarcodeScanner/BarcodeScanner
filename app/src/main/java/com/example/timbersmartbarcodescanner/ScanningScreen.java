@@ -805,7 +805,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                                     mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
                                     mListView.setAdapter(mBarcodeListAdapter);
                                     update();
-                                    BarcodeText.setText(getString(R.string.barcode));
+                                    //BarcodeText.setText(getString(R.string.barcode));
 
                                     File f = new File(bitmapDirectory, bitmapId + ".jpg");
                                     boolean delete = f.delete();
