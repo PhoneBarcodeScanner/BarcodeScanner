@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,8 +27,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -118,7 +115,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.menu,menu);
-        mi = menu.findItem(R.id.check_duplicated);
+        mi = menu.findItem(R.id.client);
         help = menu.findItem(R.id.help);
 
         Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Stock take",false);
@@ -135,7 +132,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId())
         {
-            case R.id.check_duplicated:
+            case R.id.client:
                 SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 if(item.isChecked())
@@ -158,12 +155,6 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                         //.setMessage("The setting of Allow Duplication True/False will enable or disable adding same Barcode/Area/Stock take in the activity of Barcode/Area/Stock.")
                         .setPositiveButton("OK",null)
                         .show();
-                break;
-
-                //bluetooth connectivity ------  ? (keep or remove)
-            case R.id.bluetooth_connect:
-                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                startActivity(intent);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -194,20 +185,10 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-       /* try {
-           writeFileOnInternalStorage();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
         BarcodeScannerDB.closeDatabase();
     }
 
     private void init() throws Exception {
-      /*  try {
-            readFromFile();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }   */
         //Set up views -------------------------------
 
         mainTitle = findViewById(R.id.titleas);
@@ -216,7 +197,6 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         mAddNewStocktake = findViewById(R.id.ActivityMainAddNewStocktake);
         mNewStocktakeName = findViewById(R.id.ActivityMainEditStocktake);
         mHintLayoutTab = findViewById(R.id.emptyTab);
-       // iv = findViewById(R.id.Stockimage);
         toolbar_stock_screen=(Toolbar)findViewById(R.id.StockScreenToolBar);
         setSupportActionBar(toolbar_stock_screen);
         title.setTag(new Boolean(false));
@@ -252,9 +232,8 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 e.printStackTrace();
             }
         });
-        //--------------------------------------------------------------
 
-        // Layout stuff----------------------------------------
+
         try {
             mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
             mListView.setAdapter(mStocktakeListAdapter);
@@ -271,16 +250,6 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
         checkIfThereAreAnyStocktakes();
 
-        //----------------------------------------------------------------------------
-        //on click listener for returning to home
-
-
-
-
-
-
-        // Add addNew stocktake button onclick listener----------------
-        //    StockTakeListAdapter finalStockTakeListAdapter = stockTakeListAdapter;
         mAddNewStocktake.setOnClickListener(view -> {
             String newStocktakeName = mNewStocktakeName.getText().toString();
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
@@ -335,7 +304,6 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
             }
             update();
         });
-        //----------------------------------------------------------------------------
     }
 
 
@@ -487,7 +455,6 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
             fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             fileIntent.putExtra(Intent.EXTRA_STREAM, path);
             startActivity(Intent.createChooser(fileIntent, "Send Mail"));
-            //Toast.makeText(this, "test", Toast.LENGTH_LONG ).show();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -495,14 +462,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-       /* try {
-            writeFileOnInternalStorage();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-    }
+    protected void onPause() { super.onPause(); }
 
     @Override
     protected void onResume(){
@@ -513,112 +473,4 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
             e.printStackTrace();
         }
     }
-
-   /* public void writeFileOnInternalStorage() throws Exception {
-        File path = getApplicationContext().getExternalFilesDir(null);
-        File file = new File(path, "my-file-name.txt");
-        FileOutputStream stream = new FileOutputStream(file);
-        String stringToWriteInFile = Data.getDataInstance().ToString();
-        try {
-            stream.write(stringToWriteInFile.getBytes());
-        } finally {
-            stream.close();
-        }
-    }
-
-    private void readFromFile() throws Exception {
-        File path = getApplicationContext().getExternalFilesDir(null);
-        File file = new File(path, "my-file-name.txt");
-        int length = (int) file.length();
-
-        byte[] bytes = new byte[length];
-
-        FileInputStream in = null;
-        try {
-            in = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        if (in == null) return;
-        try {
-            try {
-                in.read(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } finally {
-            try {
-                in.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        ArrayList<Stocktake> tempArrayListStocktake = new ArrayList<Stocktake>();
-        String contents = new String(bytes);
-        String[] newContents = getQuotesString(contents);
-
-        // Start of file read
-        if (newContents[0].equals("START-OF-TIMBER-SMART-DATA")) {
-
-            newContents = getQuotesString(newContents[1]); //is the uniqueImageIdCount
-            Data.getDataInstance().setImageIdCount(Integer.parseInt(newContents[0]));
-
-            newContents = getQuotesString(newContents[1]);
-            // Start reading in stocktakes
-            while (newContents[0].equals("Stock-take-start")) {
-
-                    String[] StockTakeName = getQuotesString(newContents[1]);
-                    String[] StockTakeDateCreated = getQuotesString(StockTakeName[1]);
-                    String[] StockTakeDateModified = getQuotesString(StockTakeDateCreated[1]);
-                    Stocktake tempStocktake = new Stocktake(StockTakeName[0], StockTakeDateCreated[0], StockTakeDateModified[0]);
-                    newContents = getQuotesString(StockTakeDateModified[1]);
-
-                    // Start reading in areas related to stocktake
-                    while (newContents[0].equals("Area-start")) {
-                        String[] AreaName = getQuotesString(newContents[1]);
-                        String[] AreaDate = getQuotesString(AreaName[1]);
-                        String[] AreaPreCount = getQuotesString(AreaDate[1]);
-                        Area tempArea = new Area(AreaName[0], AreaDate[0], AreaPreCount[0]);
-                        newContents = getQuotesString(AreaPreCount[1]);
-
-//asd                   // Start reading in barcodes related to area
-                        while (newContents[0].equals("Barcode-start")) {
-
-                            String[] Barcode = getQuotesString(newContents[1]);
-                            String[] BarcodeDate = getQuotesString(Barcode[1]);
-                            String[] BarcodeArea = getQuotesString(BarcodeDate[1]);
-                            String[] BarcodeCount = getQuotesString(BarcodeArea[1]);
-                            String[] BarcodeBitmapId = getQuotesString(BarcodeCount[1]);
-                            Barcode tempBarcode = new Barcode(Barcode[0], BarcodeDate[0], BarcodeArea[0], BarcodeCount[0], BarcodeBitmapId[0]);
-                            tempArea.addBarcode(tempBarcode);
-
-                            newContents = getQuotesString(BarcodeBitmapId[1]);
-                            newContents = getQuotesString(newContents[1]);
-
-                        }
-                        tempStocktake.addArea(tempArea);
-                        newContents = getQuotesString(newContents[1]);
-                    }
-                    tempArrayListStocktake.add(tempStocktake);
-                    newContents = getQuotesString(newContents[1]);
-            }
-        }
-        Data.getDataInstance().setStocktakeList(tempArrayListStocktake);
-        mStocktakeListAdapter.notifyDataSetChanged();
-    }
-
-    /* This function will return the first item found in quotations as the first parameter
-    * It returns the rest of the contents as a second parameter*/
-   /* private String[] getQuotesString(String contents) {
-        String[] newContents = new String[2];
-        StringBuilder firstItem = new StringBuilder();
-        int i = 1; //Starts at 1 to skip the first "
-        while (contents.charAt(i) != '\"'){
-            firstItem.append(contents.charAt(i));
-            i++;
-        }
-        newContents[0] = firstItem.toString();
-        newContents[1] = contents.substring(i+1);//+1 to remove the end "
-        return newContents;
-    } */
 }

@@ -25,7 +25,6 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -81,7 +80,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     private StocktakeDAO stocktakeDAO;
 
     private int mCountGlobal, mPreCountGlobal;
-    private TextView mCount, mDifference, mArea_title, mt_Barcode, mt_Row, mt_Count, mt_Date;
+    private TextView mCount, mDifference, mArea_title, BarcodeText, mt_Barcode, mt_Row, mt_Count, mt_Date;
     private EditText mBarcode, mPreCount;
     private Button mEnter, mConfirmPreCount, search;
     private ListView mListView;
@@ -111,7 +110,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scanning_screen);
-//        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         toolbar_scanning_screen = (Toolbar) findViewById(R.id.ScanningScreenToolBar);
         setSupportActionBar(toolbar_scanning_screen);
         barcodeDAO = BarcodeScannerDB.getDatabaseInstance(this).barcodeDao();
@@ -132,15 +130,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         bitmapDirectory = cw.getDir("bitmap_", Context.MODE_PRIVATE);
 
-        //get the current imageUniqueId that a new image can be stored under
-      /*  try {
-           // imageUniqueId = Data.getDataInstance().getImageIdCount();
-            imageUniqueId = Barcode.getImageIdCount();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }   */
-
-
         try {
             //set title for scanning screen
             mArea_title = findViewById(R.id.textViewTitle);
@@ -150,13 +139,10 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        // 바코드 읽기 요청
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        // 바코드 읽기 결과 처리
         if (requestCode == 0) {
             if (isScanRunning) {
                 setupCamera();
@@ -207,7 +193,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
-        mi = menu.findItem(R.id.check_duplicated);
+        mi = menu.findItem(R.id.client);
         help = menu.findItem(R.id.help);
 
         Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Scanning", false);
@@ -223,7 +209,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.check_duplicated:
+            case R.id.client:
                 SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 if (item.isChecked()) {
@@ -248,13 +234,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         .setIcon(R.drawable.ic_baseline_info_24)
                         .setTitle("Help Instruction")
                         .setMessage("'Allow Duplication' will allow the entering of duplicate data")
-                        //.setMessage("The setting of Allow Duplication True/False will enable or disable adding same Barcode/Area/Stock take in the activity of Barcode/Area/Stock.")
                         .setPositiveButton("OK", null)
                         .show();
-                break;
-            case R.id.bluetooth_connect:
-                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                startActivity(intent);
                 break;
             case R.id.setting:
                 startActivity(new Intent(this, SettingActivity.class));
@@ -276,10 +257,13 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         search = findViewById(R.id.buttonSearch);
         mVideoSurface = findViewById(R.id.tvScan);
         scScan = findViewById(R.id.scScan);
+        Boolean scScanState = scScan.isChecked();
         vScan = findViewById(R.id.vScan);
-        btnScan = findViewById(R.id.btnScan);
+        BarcodeText = findViewById(R.id.codeDesc);
+
         mVideoSurface.setOnClickListener(v -> {
-            if (ScanningScreen.this.camera != null) {
+            //if (ScanningScreen.this.camera != null) {
+            if(scScanState == false) {
                 camera.close();
                 camera = null;
             }
@@ -287,15 +271,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                     new Intent(this, BarcodeScannerActivity.class),
                     0);
         });
-        btnScan.setOnClickListener(v -> {
-            if (ScanningScreen.this.camera != null) {
-                camera.close();
-                camera = null;
-            }
-            startActivityForResult(
-                    new Intent(this, BarcodeScannerActivity.class),
-                    0);
-        });
+
         vScan.setOnClickListener(v -> {
             isScanRunning = !isScanRunning;
             scScan.setChecked(isScanRunning);
@@ -396,6 +372,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             mBarcode.setText(temp);
         });
 
+        //////////////////////////////////////////////////////////////////
         mConfirmPreCount.setOnClickListener((View v) -> {
             String tempString = mPreCount.getText().toString();
             int tempPreCount;
@@ -405,6 +382,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             } else {
                 tempPreCount = Integer.parseInt(tempString);
             }
+
 
             mPreCountGlobal = tempPreCount;
             try {
@@ -548,6 +526,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                     mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
                     mListView.setAdapter(mBarcodeListAdapter);
                     update();
+                    BarcodeText.setText(getString(R.string.barcode));
                     break;
                 }
             }
@@ -559,7 +538,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                 mBarcodeListAdapter = new BarcodeListAdapter(this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
                 mListView.setAdapter(mBarcodeListAdapter);
                 update();
-                // int temp5 = areaDAO.updateBarcodeID(parentArea.getAreaID(), newBarcode.getBarcodeID());
+                BarcodeText.setText(getString(R.string.barcode));
             } // update parents...//
             int temp5 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), dateFormat.format(date));
             int tempCount = parentArea.getNumOfBarcodes() + 1; // increment number of barcodes in area
@@ -593,6 +572,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                         TextView child = (TextView) parent.getChildAt(0);
                         String item = child.getText().toString();
                         Toast.makeText(ScanningScreen.this, item + " deleted", Toast.LENGTH_LONG).show();
+                        mPreCount.setText(item+ " deleted");
                         try {
                             for (int n = 0; n < barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).size(); n++) {
                                 Barcode barcode = barcodeDAO.getBarcodesForArea(parentArea.getAreaID()).get(n);
@@ -601,34 +581,15 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                                     String[] bitmapIDs = barcode.getBitmapID().split(",");
                                     bitmapId = Integer.parseInt(bitmapIDs[0]); // get first bitmap id
                                     if (barcode.getBarcodeCount() == 1) {
-                                        //bitmapId = barcode.getBitmapIdArrayList().get(0);//delete the only entry at index 0
-                                        // String[] bitmapIDs = barcode.getBitmapID().split(",");
-                                        //  bitmapId = Integer.parseInt(bitmapIDs[0]); // get first bitmap id
-                                        //area.getBarcodeList().remove(n);
                                         barcodeDAO.delete(barcode); /// delete barcode from database
-                                      /*  mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
-                                        mListView.setAdapter(mBarcodeListAdapter);
-                                        update();   */
                                     } else {
                                         int x = barcode.getBarcodeCount();
                                         x--;
-                                        // barcode.setCount("" + x); //decrease count
                                         int temp5 = barcodeDAO.updateBarcodeCount(x, barcode.getBarcodeID()); // update barcode count for specific barcode
-                                        //delete one image instance first or last entry in array list???
-                                    /*    ArrayList<Integer> bitmapIdArray = barcode.getBitmapIdArrayList();
-                                        int bitmapIndex = bitmapIdArray.size() - 1;//get last index to delete from???
-                                        bitmapId = barcode.getBitmapIdArrayList().get(bitmapIndex);
-                                        barcode.deleteOneBitmapId(bitmapIndex); //??    */
-                                        /// deleting first bitmap instance from bitmapID string:
-                                        // String[] bitmapIDs = barcode.getBitmapID().split(",");
-                                        //  bitmapId = Integer.parseInt(bitmapIDs[0]); // delete first bitmapID
-                                        // update bitmapID string using substring method.
+
                                         int beginIndex = bitmapIDs[0].length() + 1; // need to start substring passed the "," of old bitmapID
                                         String newBitmapIDs = barcode.getBitmapID().substring(beginIndex);
                                         temp5 = barcodeDAO.updateBitmapID(newBitmapIDs, barcode.getBarcodeID()); // update database entry
-                                      /*  mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
-                                        mListView.setAdapter(mBarcodeListAdapter);
-                                        update();   */
                                     }
                                     int temp5 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), // update stocktake modified date
                                             new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date()));
@@ -641,6 +602,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                                     mBarcodeListAdapter = new BarcodeListAdapter(ScanningScreen.this, R.layout.listview_scanning_screen, new ArrayList<>(barcodeDAO.getBarcodesForArea(parentArea.getAreaID())), duplicationEnabled);
                                     mListView.setAdapter(mBarcodeListAdapter);
                                     update();
+                                    BarcodeText.setText(getString(R.string.barcode));
 
                                     File f = new File(bitmapDirectory, bitmapId + ".jpg");
                                     boolean delete = f.delete();
@@ -1022,8 +984,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     }
 
     private static int generateUniqueId() {
-        // int id = Data.getDataInstance().getImageIdCount();
-        //  Data.getDataInstance().setImageIdCount(id + 1);
         int id = com.example.timbersmartbarcodescanner.Barcode.getImageIdCount();
         com.example.timbersmartbarcodescanner.Barcode.setImageIdCount(id + 1);
         return id;

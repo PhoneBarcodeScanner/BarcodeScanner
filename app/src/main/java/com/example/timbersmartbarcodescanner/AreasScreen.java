@@ -5,14 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
-import android.provider.Settings;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -25,8 +17,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
@@ -81,7 +76,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.menu,menu);
-        mi = menu.findItem(R.id.check_duplicated);
+        mi = menu.findItem(R.id.client);
         help = menu.findItem(R.id.help);
 
         Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Area",false);
@@ -98,7 +93,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId())
         {
-            case R.id.check_duplicated:
+            case R.id.client:
                 SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 if(item.isChecked())
@@ -118,13 +113,8 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                         .setIcon(R.drawable.ic_baseline_info_24)
                         .setTitle("Help Instruction")
                         .setMessage("'Allow Duplication' will allow the entering of duplicate data")
-                        //.setMessage("The setting of Allow Duplication True/False will enable or disable adding same Barcode/Area/Stock take in the activity of Barcode/Area/Stock.")
                         .setPositiveButton("OK",null)
                         .show();
-                break;
-            case R.id.bluetooth_connect:
-                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                startActivity(intent);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -150,10 +140,6 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         mHintLayoutTab = findViewById(R.id.emptyTab);
         toolbar_scanning_screen=(Toolbar)findViewById(R.id.ScanningScreenToolBar);
         setSupportActionBar(toolbar_scanning_screen);
-
-        //feature for sorting on activity areas
-        //  iv1 = findViewById(R.id.Areaimage);
-        //   iv2 = findViewById(R.id.Dateimage2);
 
         try {
             mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
@@ -196,7 +182,6 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                             mAreaListAdapter = new AreaListAdapter(this, R.layout.listview_areas_screen, new ArrayList<>(areaDAO.getAreasForStocktake(parentStocktake.getStocktakeID())));
                             mListView.setAdapter(mAreaListAdapter);
                             update();
-                            //stocktakeDAO.updateAreaID(parentStocktake.getStocktakeID(), mArea.getAreaID());
                             int temp = parentStocktake.getNumOfAreas() + 1; // avoiding the use of an sql query for speed
                             int temp1 = stocktakeDAO.updateNumOfAreas(parentStocktake.getStocktakeID(), temp);
                             temp1 = stocktakeDAO.updateDateModified(parentStocktake.getStocktakeID(), dateFormat.format(date));
@@ -318,26 +303,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
 
 
     @Override
-    protected void onPause() {
-        super.onPause();
-       /* try {
-            writeFileOnInternalStorage();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }   */
-    }
-
-   /* public void writeFileOnInternalStorage() throws Exception {
-        File path = getApplicationContext().getExternalFilesDir(null);
-        File file = new File(path, "my-file-name.txt");
-        FileOutputStream stream = new FileOutputStream(file);
-        String stringToWriteInFile = Data.getDataInstance().ToString();
-        try {
-            stream.write(stringToWriteInFile.getBytes());
-        } finally {
-            stream.close();
-        }
-    }   */
+    protected void onPause() { super.onPause(); }
 
     // On-Click listener assigned to ListViews "Add Barcode" Button
     // When clicked will open scanning screen in context to area clicked

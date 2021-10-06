@@ -12,12 +12,9 @@
         android:title=""
         app:showAsAction="always" />
     <item
-        android:id="@+id/check_duplicated"
+        android:id="@+id/client"
         android:checkable="true"
         android:icon="@drawable/ic_baseline_content_copy_24"
-        android:title="Allow Duplication" />
-    <item
-        android:id="@+id/bluetooth_connect"
-        android:icon="@drawable/ic_baseline_bluetooth_24"
-        android:title="Bluetooth Connection" />
+        android:title="Set Client ID" />
+
 </menu>

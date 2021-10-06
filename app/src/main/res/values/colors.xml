@@ -9,4 +9,6 @@
     <color name="mainBackgroundGrey">#fafafa</color>
     <color name="shape_color">#444444</color>
     <color name="placeholderGrey">#bbbbbb</color>
+
+    <color name="background_switch">#BAB5B5</color>
 </resources>
