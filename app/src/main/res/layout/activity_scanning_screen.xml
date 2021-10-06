@@ -190,7 +190,7 @@
             android:layout_height="wrap_content"
             android:gravity="center|start"
             android:padding="15dp"
-            android:text="@string/barcode"
+            android:text="@string/noBarcode"
             android:textColor="#000"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -200,29 +200,22 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/llCount" />
 
-        <Button
-            android:id="@+id/btnScan"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="scan"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/codeDesc"
-            app:layout_constraintEnd_toEndOf="@id/codeDesc"
-            app:layout_constraintTop_toTopOf="@id/codeDesc" />
-
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/scScan"
+            android:background="@color/background_switch"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Scanning is currently disabled"
+            android:textSize="15dp"
+            android:textStyle="bold"
+            android:text="Tap this switch to scan"
             app:layout_constraintBottom_toTopOf="@id/tvScan"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toEndOf="@id/codeDesc"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <View
+        <androidx.appcompat.widget.Toolbar
             android:id="@+id/vScan"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -230,7 +223,6 @@
             app:layout_constraintEnd_toEndOf="@id/scScan"
             app:layout_constraintStart_toStartOf="@id/scScan"
             app:layout_constraintTop_toTopOf="@id/scScan" />
-
 
         <TextureView
             android:id="@+id/tvScan"

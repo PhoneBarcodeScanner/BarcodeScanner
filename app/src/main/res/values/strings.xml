@@ -60,6 +60,7 @@
     <string name="date">Date</string>
     <string name="row">Row</string>
     <string name="barcode">Barcode</string>
+    <string name="noBarcode">No barcode scanned yet</string>
     <string name="area">Area</string>
     <string name="add_barcodes">Add Barcodes</string>
     <string name="view_barcodes">View barcodes</string>

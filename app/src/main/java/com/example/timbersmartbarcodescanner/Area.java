@@ -6,8 +6,6 @@ import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-import java.util.Date;
-
 import static androidx.room.ForeignKey.CASCADE;
 
 @Entity (foreignKeys = {@ForeignKey(entity = Stocktake.class,
@@ -41,15 +39,11 @@ public class Area {
     int getAreaPreCount() { return areaPreCount; }
     int getNumOfBarcodes() { return numOfBarcodes; }
 
-    //
-
-
     public Area (long stocktake_id, String areaName, String areaDate, int areaPreCount, int numOfBarcodes) {
         this.stocktake_id = stocktake_id;
         this.areaName = areaName;
         this.areaDate = areaDate;
         this.areaPreCount = areaPreCount;
         this.numOfBarcodes = numOfBarcodes;
-       // this.bcd_id = 0;
     }
 }

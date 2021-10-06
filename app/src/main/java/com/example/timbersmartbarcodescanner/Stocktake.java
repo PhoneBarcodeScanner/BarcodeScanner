@@ -2,17 +2,13 @@ package com.example.timbersmartbarcodescanner;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.Index;
 import androidx.room.PrimaryKey;
-
-import java.util.Date;
 
 @Entity()
 public class Stocktake {
     @PrimaryKey(autoGenerate = true)
     public long stk_id;
 
-  //  public long are_id;
     @ColumnInfo(name = "stk_name")
     public String stocktakeName;
 
@@ -35,6 +31,5 @@ public class Stocktake {
         this.stocktakeDateCreated = stocktakeDateCreated;
         this.stocktakeDateMod = stocktakeDateMod;
         this.numOfAreas = numOfAreas;
-       // this.are_id = 0;
     }
 }
