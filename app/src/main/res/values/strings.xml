@@ -47,7 +47,7 @@
     <string name="ScanningScreenBlankCounter">XXX</string>
     <string name="ScanningScreenPreCount">Pre-count</string>
     <string name="ScanningScreenPreCountDefault">0</string>
-    <string name="ScanningScreenBarcodeDefault">Scan Barcode Here...</string>
+    <string name="ScanningScreenBarcodeDefault">Manual Entry Here...</string>
     <string name="enter">Enter</string>
     <string name="enter_barcode_here">Enter Barcode Here</string>
     <string name="count">Count</string>
@@ -81,4 +81,5 @@
     <string name="txt_user_input">Please enter a number for Row and Pre-Count</string>
     <string name="search">Tap to Search</string>
     <string name="title_activity_full_screen">FullScreen</string>
+    <string name="placeholder_text">No Barcodes Scanned</string>
 </resources>

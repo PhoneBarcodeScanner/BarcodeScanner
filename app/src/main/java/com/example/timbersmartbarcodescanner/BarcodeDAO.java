@@ -5,6 +5,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 @Dao
 public interface BarcodeDAO {
 
-    @Query("SELECT * FROM Barcode") // probably not required...delete later
+    @Query("SELECT * FROM Barcode") //  not required...delete later
     List<Barcode> getAllBarcodes();
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -21,8 +22,12 @@ public interface BarcodeDAO {
     @Delete
     void delete(Barcode barcode);
 
+    @Transaction
     @Query("SELECT * FROM barcode WHERE area_id = :areaIndex")
     List<Barcode> getBarcodesForArea(long areaIndex);
+
+    @Query("SELECT * FROM barcode WHERE bcd_string = :barcodeString AND area_id = :areaIndex")
+    Barcode getBarcodeByString(String barcodeString, long areaIndex); // each barcode should be unique
 
     /////// not using this, will add up individual barcode counts ////// delete later
     @Query("SELECT COUNT(*) FROM barcode WHERE area_id = :areaIndex")

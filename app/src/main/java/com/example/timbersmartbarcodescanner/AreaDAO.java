@@ -1,10 +1,13 @@
 package com.example.timbersmartbarcodescanner;
 
+import android.annotation.TargetApi;
+
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +24,7 @@ public interface  AreaDAO {
     @Delete
     void delete(Area area);
 
+    @Transaction
     @Query("SELECT * FROM area WHERE stocktake_id = :stocktakeIndex")
     List<Area> getAreasForStocktake(long stocktakeIndex);
 

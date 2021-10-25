@@ -65,8 +65,6 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
     private CameraDevice camera;
     private Size size;
 
-    private boolean isRunning = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,11 +118,13 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
             Bitmap bitmap = textureView.getBitmap();
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                     .addOnSuccessListener(barcodes -> {
-                        Log.i(TAG, "onSurfaceTextureUpdated: first scan ");
-                        preScanTime = System.currentTimeMillis();
-                        onBarcodeRead(barcodes, bitmap);
+                        Log.i(TAG, "onSurfaceTextureUpdated: first scan ==" + barcodes);
+                        if (!barcodes.isEmpty()) {
+                            preScanTime = System.currentTimeMillis();
+                            onBarcodeRead(barcodes, bitmap);
+                        }
                     })
-                    .addOnFailureListener(e -> isRunning = false);
+                    .addOnFailureListener(e -> {});
         } else {
             Log.i(TAG, "onSurfaceTextureUpdated: repetition");
             Toast.makeText(this, "Do not scan code repeatedly within " + intervalTime / 1000 + " seconds", Toast.LENGTH_SHORT).show();
@@ -246,8 +246,6 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
     }
 
     private void onBarcodeRead(List<Barcode> barcodes, Bitmap capture) {
-        isRunning = false;
-        if (barcodes.isEmpty()) return;
         int imageId = saveImage(capture);
         String[] barcodeArr = barcodes.stream().map(Barcode::getRawValue).toArray(String[]::new);
         Intent intent = new Intent();
