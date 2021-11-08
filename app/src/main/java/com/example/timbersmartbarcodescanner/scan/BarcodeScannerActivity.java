@@ -42,7 +42,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
+/**
+ * Full-screen code scanning activity
+ */
 public class BarcodeScannerActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
 
 
@@ -83,6 +85,8 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
     public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
         this.width = width;
         this.height = height;
+        //Setting camera Parameters
+
         setupCamera();
     }
 
@@ -90,6 +94,8 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
     public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
         this.width = width;
         this.height = height;
+        //Setting camera Parameters
+
         setupCamera();
     }
 
@@ -110,7 +116,10 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
         super.onResume();
         intervalTime = getSharedPreferences("Scan interval", Context.MODE_PRIVATE).getLong("Scan interval time", 2000);
     }
-
+    /**
+     * Camera callback, we parse the scan results
+     * @param surface
+     */
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
         Log.i(TAG, "onSurfaceTextureUpdated: first scan ready");
@@ -119,6 +128,9 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                     .addOnSuccessListener(barcodes -> {
                         Log.i(TAG, "onSurfaceTextureUpdated: first scan ==" + barcodes);
+                        /*
+                         *  Sweep callback, whether the current time and the last time interval is greater than the sweep interval we set
+                         */
                         if (!barcodes.isEmpty()) {
                             preScanTime = System.currentTimeMillis();
                             onBarcodeRead(barcodes, bitmap);
@@ -127,7 +139,6 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
                     .addOnFailureListener(e -> {});
         } else {
             Log.i(TAG, "onSurfaceTextureUpdated: repetition");
-            Toast.makeText(this, "Do not scan code repeatedly within " + intervalTime / 1000 + " seconds", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -144,6 +155,9 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
         }
     }
 
+    /**
+     * Setting camera Parameters
+     */
     private void setupCamera() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
@@ -244,7 +258,12 @@ public class BarcodeScannerActivity extends AppCompatActivity implements Texture
         }
         textureView.setTransform(matrix);
     }
-
+    /**
+     * Returns the scan result to the listening activity
+     *
+     * @param barcodes
+     * @param capture
+     */
     private void onBarcodeRead(List<Barcode> barcodes, Bitmap capture) {
         int imageId = saveImage(capture);
         String[] barcodeArr = barcodes.stream().map(Barcode::getRawValue).toArray(String[]::new);

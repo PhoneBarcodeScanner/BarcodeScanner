@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".SettingActivity"></activity>
+        <activity android:name=".SettingActivity" android:screenOrientation="sensorLandscape"></activity>
         <activity
             android:name=".ConnectionActivity"
             android:label="@string/title_activity_home_screen"

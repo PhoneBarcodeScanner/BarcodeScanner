@@ -100,37 +100,21 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
         switch (item.getItemId())
         {
 
-           /* case R.id.check_duplicated:
-                SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sp.edit();
-                if(item.isChecked())
-                {
-                    item.setChecked(false);
-                    editor.putBoolean("Area", false);
-                    Toast.makeText(this,"Allow Area Duplication False",Toast.LENGTH_SHORT).show();
-                }else{
-                    item.setChecked(true);
-                    editor.putBoolean("Area", true);
-                    Toast.makeText(this,"Allow Area Duplication True",Toast.LENGTH_SHORT).show();
-                }
-                editor.apply();
-                break;
-                */
 
             case R.id.help:
                 new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_baseline_info_24)
-                        .setTitle("Help Instruction")
-                        .setMessage("'Allow Duplication' will allow the entering of duplicate data")
+                        .setTitle("Help")
+                        .setMessage("-Add Areas to start scanning\n-Delete area to remove area and all barcodes")
                         .setPositiveButton("OK",null)
                         .show();
                 break;
 
 
-
+            //Set client ID to change export filename
             case R.id.client_ID_set:
-                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor2 = sp2.edit();
+                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE); //open shared preferences
+                SharedPreferences.Editor editor2 = sp2.edit(); //create editor object
                 AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
                 int current = sp2.getInt("ClientID", ClientID);
 
@@ -157,8 +141,8 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                             toast.show();
                         } else {
                             ClientID = Integer.parseInt(input.getText().toString());
-                            editor2.putInt("ClientID", ClientID);
-                            editor2.apply();
+                            editor2.putInt("ClientID", ClientID); //save new client id to shared preferences under key "Client ID"
+                            editor2.apply(); //apply changes
                             Toast.makeText(AreasScreen.this, "Client ID changed",
                                     Toast.LENGTH_SHORT).show();
                         }
@@ -175,6 +159,7 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
 
                 break;
 
+                //Filters barcodes based on the prefix, ignores barcodes without set prefix
             case R.id.barcode_prefix_filter:
                 SharedPreferences sp3 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor3 = sp3.edit();
@@ -232,6 +217,12 @@ public class AreasScreen extends AppCompatActivity implements Serializable {
                 bBuilder.show();
 
                 break;
+
+            case R.id.setting:
+                // add menu item in menu.xml and link it
+                startActivity(new Intent(this, SettingActivity.class));
+                break;
+
 
         }
         return super.onOptionsItemSelected(item);

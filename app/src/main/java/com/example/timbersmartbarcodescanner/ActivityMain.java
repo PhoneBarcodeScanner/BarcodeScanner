@@ -45,7 +45,7 @@ import java.util.Date;
  *   159.333 - Programming Project Semester 2, 2021
  *   TimberSmart Phone Barcode scanner
  *
- *   Student Name / Student ID:
+ *    Student Name / Student ID:
  *       Runyu Luo (17217478)
  *       Caitlin Winterburn (19028948)
  *       Mohammed Shareef (19032353)
@@ -119,16 +119,12 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         return super.onMenuOpened(featureId, menu);
     }
 
+    //Inflate options menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
         inflater.inflate(R.menu.menu,menu);
-        //mi = menu.findItem(R.id.check_duplicated);
-
         help = menu.findItem(R.id.help);
-
-
-
         return true;
     }
 
@@ -136,37 +132,21 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId())
         {
-
-            /*case R.id.check_duplicated:
-                SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sp.edit();
-                if(item.isChecked())
-                {
-                    item.setChecked(false);
-                    editor.putBoolean("Stock take", false);
-                    Toast.makeText(this,"Allow Stocktake Duplication False",Toast.LENGTH_SHORT).show();
-                }else{
-                    item.setChecked(true);
-                    editor.putBoolean("Stock take", true);
-                    Toast.makeText(this,"Allow Stocktake Duplication True",Toast.LENGTH_SHORT).show();
-                }
-                editor.apply();
-                break;
-                */
-
+            //Displays a dialog showing what can be done on the activity
             case R.id.help:
                 new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_baseline_info_24)
-                        .setTitle("Help Instruction")
-                        .setMessage("'Allow Duplication' will allow the entering of duplicate data")
+                        .setTitle("Help")
+                        .setMessage("-Add Stocktake to add Areas\n-Delete Stocktake to remove its areas and barcodes" +
+                                "\n-Export stocktake to CSV file using export icon ('Set Client ID' will add prefix to filename)")
                         //.setMessage("The setting of Allow Duplication True/False will enable or disable adding same Barcode/Area/Stock take in the activity of Barcode/Area/Stock.")
                         .setPositiveButton("OK",null)
                         .show();
                 break;
-
+            //Sets the client ID to append to the exported filename
             case R.id.client_ID_set:
-                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor2 = sp2.edit();
+                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE); //open shared preferences
+                SharedPreferences.Editor editor2 = sp2.edit(); //create editor object
                 AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
                 int current = sp2.getInt("ClientID", ClientID);
 
@@ -193,8 +173,8 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                             toast.show();
                         } else {
                             ClientID = Integer.parseInt(input.getText().toString());
-                            editor2.putInt("ClientID", ClientID);
-                            editor2.apply();
+                            editor2.putInt("ClientID", ClientID); //store client ID in shared preferences under "ClientID" key
+                            editor2.apply(); //apply changes
                             Toast.makeText(ActivityMain.this, "Client ID changed",
                                     Toast.LENGTH_SHORT).show();
                         }
@@ -210,7 +190,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                 cBuilder.show();
 
                 break;
-
+            //Filters out barcodes if they do not match the filter
             case R.id.barcode_prefix_filter:
                 SharedPreferences sp3 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor3 = sp3.edit();
@@ -270,6 +250,12 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
 
                 break;
 
+            case R.id.setting:
+                // add menu item in menu.xml and link it
+                startActivity(new Intent(this, SettingActivity.class));
+                break;
+
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -301,7 +287,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         super.onDestroy();
         BarcodeScannerDB.closeDatabase();
     }
-///////
+    ///////
     private void init() throws Exception {
         //Set up views -------------------------------
 
@@ -365,7 +351,6 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         checkIfThereAreAnyStocktakes();
 
         // Add addNew stocktake button onclick listener----------------
-
         mAddNewStocktake.setOnClickListener(view -> {
             String newStocktakeName = mNewStocktakeName.getText().toString();
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
@@ -376,8 +361,8 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
                         Toast.makeText(this, "Field is empty. Please enter a name for the Stocktake", Toast.LENGTH_SHORT).show();
                     } else {
                         stocktakeDAO.insertStocktake(new Stocktake(newStocktakeName, dateFormat.format(date),
-                                dateFormat.format(date), 0));
-                        mStocktakeListAdapter.notifyDataSetChanged();
+                                dateFormat.format(date), 0)); //add stocktake to the database
+                        mStocktakeListAdapter.notifyDataSetChanged(); //update listview to populate with new stocktake
                         mListView.invalidateViews();
                         mNewStocktakeName.setText("");
                         mStocktakeListAdapter = new StocktakeListAdapter(this, R.layout.listview_main, new ArrayList<>(stocktakeDAO.getAllStocktakes()));
@@ -558,11 +543,10 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
         }
 
         try {
-            // Generating file name e.g. Stocktake_5.csv
-            // Uses name to create file as well
+            // Generating file name, clientID_StocktakeName.csv
             SharedPreferences sh = getSharedPreferences("Timber Smart", MODE_PRIVATE);
             int id = sh.getInt("ClientID", ClientID);
-            String fileSaveName = id+"_"+ stocktake.getStocktakeName() + ".csv";
+            String fileSaveName = id+"_"+ stocktake.getStocktakeName() + ".csv"; //sets export filename using shared preferences stored value
             FileOutputStream out = openFileOutput(fileSaveName, Context.MODE_PRIVATE);
             out.write(data.toString().getBytes());
             out.close();
@@ -576,6 +560,7 @@ public class ActivityMain extends AppCompatActivity implements Serializable {
             Intent fileIntent = new Intent(Intent.ACTION_SEND);
             fileIntent.setType("text/csv");
             fileIntent.putExtra(Intent.EXTRA_SUBJECT, "Phone_Scanner_Automated_CSV_"+id);
+            fileIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"timberxchange@timbersmart.co.nz"}); //sets recipient to timbersmart to initialise exchange network
             fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             fileIntent.putExtra(Intent.EXTRA_STREAM, path);
             startActivity(Intent.createChooser(fileIntent, "Send Mail"));

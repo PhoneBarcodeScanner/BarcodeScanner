@@ -1,6 +1,7 @@
-# DroneBarcodeScanner
-TimberSmart DroneBarcodeScanner
-This is a Drone Barcode Scanning app which talks to TimberSmart's inventory management system.
-The drone barcode scanner app will be connected to a DJI drone to fly and scan timber barcodes that could be several meters off the ground and out of reach.
-This will help TimberSmart's clients in various ways.
-This is the second development cycle of this app developed in Semester 1, 2021.
+# PhoneBarcodeScanner
+TimberSmart PhoneBarcodeScanner:
+
+This is a Phone Barcode Scanning app which talks to TimberSmart's inventory management system.
+This app will allow users to scan barcodes using a mid-range Android device - saving the data in a local database.
+This will allow TimberSmart to target small-scale businesses, providing a cheaper alternative to the Drone Scanner App but with the same features. 
+This is the first iteration of the app created in Semester 2, 2021.

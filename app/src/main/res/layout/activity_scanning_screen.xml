@@ -164,14 +164,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-              <!--  <Button
-                    android:id="@+id/buttonConfirmPreCount"
-                    android:layout_width="1dp"
-                    android:layout_height="38dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:text="Confirm Pre Count"
-                    android:textAllCaps="false" />  -->
+                <!--  <Button
+                      android:id="@+id/buttonConfirmPreCount"
+                      android:layout_width="1dp"
+                      android:layout_height="38dp"
+                      android:layout_gravity="center"
+                      android:layout_weight="1"
+                      android:text="Confirm Pre Count"
+                      android:textAllCaps="false" />  -->
             </TableLayout>
 
         </LinearLayout>
@@ -203,12 +203,11 @@
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/scScan"
-            android:background="@color/placeholderGrey"
+            android:background="@color/background_switch"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="15sp"
-            android:textStyle="bold"
-            android:text="   Tap this switch to scan"
+            android:text="   Enable Scanning"
             app:layout_constraintBottom_toTopOf="@id/tvScan"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_weight="1"

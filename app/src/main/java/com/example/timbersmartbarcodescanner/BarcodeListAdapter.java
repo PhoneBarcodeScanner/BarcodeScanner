@@ -62,9 +62,6 @@ public class BarcodeListAdapter extends ArrayAdapter {
         TextView textViewBarcode = convertView.findViewById(R.id.SSLVBarcode);
         textViewBarcode.setText(barcodeDetails);
 
-        //TextView textViewArea = convertView.findViewById(R.id.SSLVArea);
-        //textViewArea.setText(area);
-
         if (Integer.parseInt(count) > 1 /*&& !duplicationEnabled*/) {
             int colour = Color.argb(50, 200, 80, 80);
             tableRow.setBackgroundColor(colour);

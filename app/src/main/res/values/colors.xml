@@ -8,7 +8,7 @@
     <color name="colorTimberSmartGreen">#49817c</color>
     <color name="mainBackgroundGrey">#fafafa</color>
     <color name="shape_color">#444444</color>
-    <color name="placeholderGrey">#bbbbbb</color>
+    <color name="placeholderGrey">#AEB0B3</color>
 
-    <color name="background_switch">#BAB5B5</color>
+    <color name="background_switch">#d6d7d7</color>
 </resources>

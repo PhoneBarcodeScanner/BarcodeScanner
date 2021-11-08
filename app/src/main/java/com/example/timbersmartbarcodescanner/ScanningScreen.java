@@ -170,6 +170,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == 0) {
+            /**
+             * From the full screen interface callback logic, if can scan code, we are to set the camera parameters, and get the results of the full screen scan code for parsing
+             */
             if (isScanRunning) {
                 setupCamera();
             }
@@ -186,11 +189,27 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
         super.onActivityResult(requestCode, resultCode, data);
     }
+    /**
+     * Scan to listen back to the content
+     *
+     * @param barcodes
+     * @param imageId
+     * @throws Exception
+     */
 
     private void onBarcodesRead(String[] barcodes, int imageId) throws Exception {
+        boolean isSaved = false;
         for (String barcode : barcodes) {
-            saveBarcode(barcode, imageId);
+            isSaved = saveBarcode(barcode, imageId);
+
         }
+        if (!isSaved) { // if barcode didn't match prefix, delete image
+            deleteBitmap(imageId);
+        }
+    }
+    private void deleteBitmap(int bitmapId) { // called to delete unsaved barcode bitmaps from storage
+        File f = new File(bitmapDirectory, bitmapId + ".jpg");
+        f.delete();
     }
 
     public void update() {
@@ -220,15 +239,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
-        // mi = menu.findItem(R.id.check_duplicated);
         help = menu.findItem(R.id.help);
-
-        Boolean checkSelect = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE).getBoolean("Scanning", false);
-    /*    if (checkSelect) {
-            mi.setChecked(true);
-        } else {
-            mi.setChecked(false);
-        } */
         return true;
     }
 
@@ -236,42 +247,20 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            /*case R.id.check_duplicated:
-                SharedPreferences sp = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sp.edit();
-                if (item.isChecked()) {
-                    if (duplicationEnabled == true) {
-                        duplicationEnabled = false;
-                    }
-                    item.setChecked(false);
-                    editor.putBoolean("Scanning", false);
-                    Toast.makeText(this, "Allow Barcode Duplication False", Toast.LENGTH_SHORT).show();
-                } else {
-                    if (duplicationEnabled == false) {
-                        duplicationEnabled = true;
-                    }
-                    item.setChecked(true);
-                    editor.putBoolean("Scanning", true);
-                    Toast.makeText(this, "Allow Barcode Duplication True", Toast.LENGTH_SHORT).show();
-                }
-                editor.apply();
-                break;
-
-             */
 
             case R.id.help:
                 new AlertDialog.Builder(this)
                         .setIcon(R.drawable.ic_baseline_info_24)
-                        .setTitle("Help Instruction")
-                        .setMessage("'Allow Duplication' will allow the entering of duplicate data")
+                        .setTitle("Help")
+                        .setMessage("-Switch 'Enable Scanning' toggle 'on' to scan continuously \n-Tap on camera feed to open fullscreen/single scan")
                         .setPositiveButton("OK", null)
                         .show();
                 break;
 
 
             case R.id.client_ID_set:
-                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor2 = sp2.edit();
+                SharedPreferences sp2 = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE); //open shared preferences
+                SharedPreferences.Editor editor2 = sp2.edit(); //create editor object
                 AlertDialog.Builder cBuilder = new AlertDialog.Builder(this);
                 int current = sp2.getInt("ClientID", ClientID);
 
@@ -283,8 +272,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
                 final EditText input = new EditText(this);
                 input.setHint("Enter new client ID...");
-                input.setInputType(InputType.TYPE_CLASS_NUMBER);
-                cBuilder.setView(input);
+                input.setInputType(InputType.TYPE_CLASS_NUMBER); //get only numbers
+                cBuilder.setView(input); //input is the new client ID
 
                 cBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
@@ -298,8 +287,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                             toast.show();
                         } else {
                             ClientID = Integer.parseInt(input.getText().toString());
-                            editor2.putInt("ClientID", ClientID);
-                            editor2.apply();
+                            editor2.putInt("ClientID", ClientID); //save value to shared preferences under the key "Client ID"
+                            editor2.apply(); //apply changes
                             Toast.makeText(ScanningScreen.this, "Client ID changed",
                                     Toast.LENGTH_SHORT).show();
                         }
@@ -377,6 +366,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
 
             case R.id.setting:
                 // add menu item in menu.xml and link it
+                //Enter the Setting activity
+
                 startActivity(new Intent(this, SettingActivity.class));
                 break;
 
@@ -400,26 +391,36 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         Boolean scScanState = scScan.isChecked();
         vScan = findViewById(R.id.vScan);
         BarcodeText = findViewById(R.id.codeDesc);
+        /*
+         * Click the camera UI to enter the full-screen interface
+         */
 
         mVideoSurface.setOnClickListener(v -> {
             //if (ScanningScreen.this.camera != null) {
+            //Before entering full screen, you need to turn off the camera and set the camera to null
+
             if (!scScanState && camera != null) {
                 camera.close();
                 camera = null;
             }
+            //Use forResult to perform full-screen sweep callback
+
             startActivityForResult(
                     new Intent(this, BarcodeScannerActivity.class),
                     0);
         });
+        /*
+         * Whether to enable scan, on we reset the camera Settings, otherwise off the camera, while setting the camera to empty
+         */
 
         vScan.setOnClickListener(v -> {
             isScanRunning = !isScanRunning;
             scScan.setChecked(isScanRunning);
             if (isScanRunning && ScanningScreen.this.camera == null) {
-                scScan.setText("Scanning is currently enabled");
+                scScan.setText(" Continuous scanning: Enabled");
                 setupCamera();
             } else if (ScanningScreen.this.camera != null) {
-                scScan.setText("Scanning is currently disabled");
+                scScan.setText(" Continuous scanning: Disabled");
                 camera.close();
                 camera = null;
             }
@@ -523,29 +524,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             mBarcode.setText(temp);
         });
 
-     /*   mConfirmPreCount.setOnClickListener((View v) -> {
 
-            String tempString = mPreCount.getText().toString();
-            int tempPreCount;
-
-            if (tempString.equals("")) {
-                tempPreCount = 0;
-            } else {
-                tempPreCount = Integer.parseInt(tempString);
-            }
-
-
-            mPreCountGlobal = tempPreCount;
-            try {
-                // area.setPreCount(tempPreCount);
-                int temp = areaDAO.updatePreCount(parentArea.getAreaID(), tempPreCount);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            calculateDifference();
-            mBarcode.requestFocus();
-
-        }); */
         initTextWatchers();
         SharedPreferences barcodeFilter = getSharedPreferences("Timber Smart", Context.MODE_PRIVATE);
         barcodePrefix = barcodeFilter.getString("BarcodePrefix", barcodePrefix);
@@ -979,7 +958,7 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Toast.makeText(ScanningScreen.this, "Barcode " + barcode.getBarcodeString() + " deleted", Toast.LENGTH_LONG).show();
+        //Toast.makeText(ScanningScreen.this, "Barcode " + barcode.getBarcodeString() + " deleted", Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -1001,6 +980,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     public void onResume() {
         Log.e(TAG, "onResume");
         super.onResume();
+        //get the delay time between next scanning
+
         intervalTime = getSharedPreferences("Scan interval", Context.MODE_PRIVATE).getLong("Scan interval time", 2000);
         // try to re-initialise the previewer and check if the product(drone) is attached and ready to use
 
@@ -1057,6 +1038,8 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
         this.width = width;
         this.height = height;
         Log.i(TAG, "onSurfaceTextureSizeChanged: ");
+        //Determine whether to set camera parameters
+
         if (isScanRunning) {
             setupCamera();
         }
@@ -1074,6 +1057,10 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     private long preScanTime = 0;
     private long intervalTime;
     private boolean isSavingCode;
+    /**
+     * Camera callback, we parse the scan results
+     * @param surface
+     */
 
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
@@ -1084,6 +1071,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             scanner.process(InputImage.fromBitmap(bitmap, 0))
                     .addOnSuccessListener(barcodes -> {
                         Log.i(TAG, "onSurfaceTextureUpdated: first scan " + barcodes);
+                        /*
+                         *  Sweep callback, whether the current time and the last time interval is greater than the sweep interval we set
+                         */
                         if (!barcodes.isEmpty()) {
                             preScanTime = System.currentTimeMillis();
                             onBarcodeRead(barcodes, bitmap);
@@ -1093,7 +1083,6 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
                     .addOnFailureListener(e -> isSavingCode = false);
         } else {
             Log.i(TAG, "onSurfaceTextureUpdated: repetition");
-      //      Toast.makeText(this, "Do not scan code repeatedly within " + intervalTime / 1000 + " seconds", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1109,7 +1098,9 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
             setupCamera();
         }
     }
-
+    /**
+     * Set the camera parameters
+     */
     private void setupCamera() {
         Log.i(TAG, "setupCamera: ");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -1214,12 +1205,18 @@ public class ScanningScreen extends AppCompatActivity implements TextureView.Sur
     }
 
     private void onBarcodeRead(List<com.google.mlkit.vision.barcode.Barcode> barcodes, Bitmap capture) {
+        boolean isSaved = false;
+        int imageId = -1;
         for (String barcode : barcodes.stream().map(com.google.mlkit.vision.barcode.Barcode::getRawValue).toArray(String[]::new)) {
             try {
-                saveBarcode(barcode, saveImage(capture));
+                imageId = saveImage(capture);
+                isSaved = saveBarcode(barcode, imageId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        if (!isSaved) { // if barcode didn't match prefix, delete image
+            deleteBitmap(imageId);
         }
     }
 
